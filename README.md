@@ -8,10 +8,10 @@ This project aims to provide a logging solution for your Discord bot. It allows 
 
 ## Features
 
-- Log message events
-- Log error events
-- Customize log format
-- Save logs to file
+-   Log message events
+-   Log error events
+-   Customize log format
+-   Save logs to file
 
 ## Installation
 
@@ -28,18 +28,23 @@ To use the logger module in your Discord bot, follow these steps:
 ```javascript
 // Usage example
 const log = new Logger({
-    format: "[{{level}}] {{date:HH:mm:ss}} {{msg}}",
+    format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
     level: {
         Log: {
             color: 'white',
             use: 'log'
+            prefix: '[INFO]'
+            format: "{{prefix.blue}} {{date:HH:mm:ss} {{msg}}",
         },
         Error: {
             color: 'red',
             use: 'error'
+            prefix: '[ERROR]'
+            format: "{{prefix.red}} {{date.red:HH:mm:ss} {{msg.red}}",
         }
     }
 });
+log.log('Log', "hello world");
 
 // Now only the defined levels can be used
 log.log('Log', "This is an informational message.");

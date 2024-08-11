@@ -38,18 +38,20 @@ class Logger {
      * @param options The format and levels of the log message.
      * @example
      * const log = new Logger({
-     *     format: "[{{level}}] {{date:HH:mm:ss}} {{msg}}",
+     *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
      *     level: {
      *         Log: {
      *             color: 'white',
      *             use: 'log'
+     *             prefix: '[INFO]'
+     *             format: "{{prefix.blue}} {{date:HH:mm:ss}} {{msg}}",
      *         }
      *     }
      * });
      * log.log('Log', "hello world");
      */
     constructor(options) {
-        this.format = options.format || "[{{level}}] {{date:HH:mm:ss}} {{msg}}";
+        this.format = options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
         this.level = options.level || {
             log: {
                 color: 'white',
@@ -66,21 +68,34 @@ class Logger {
         const levelConfig = this.level[level];
         if (!levelConfig)
             throw new Error(`${level} is not a valid log level`);
-        const date = (0, moment_1.default)().format(this.extractDateFormat());
-        const formattedMessage = this.formatMessage(level, message, date);
+        // const date = moment().format(this.extractDateFormat());
+        const formattedMessage = this.formatMessage(level, message);
         const outputFn = console[levelConfig.use];
         outputFn(formattedMessage[levelConfig.color]);
     }
-    formatMessage(level, message, date) {
-        let formatted = this.format;
-        formatted = formatted.replace('{{level}}', level);
-        formatted = formatted.replace('{{msg}}', message);
-        formatted = formatted.replace(/{{date:(.*?)}}/, date);
+    formatMessage(level, message) {
+        let formatted = this.level[level].format || this.format;
+        formatted = formatted.replace(/{{(prefix|level|msg|date)(?:\.(\w+))?:?(.*?)}}/g, (_, key, color, dateFormat) => {
+            let value = '';
+            switch (key) {
+                case 'prefix':
+                    value = this.level[level].prefix;
+                    break;
+                case 'level':
+                    value = level;
+                    break;
+                case 'msg':
+                    value = message;
+                    break;
+                case 'date':
+                    value = (0, moment_1.default)().format(dateFormat);
+                    break;
+                default:
+                    break;
+            }
+            return color ? value[color] : value;
+        });
         return formatted;
-    }
-    extractDateFormat() {
-        const dateFormatMatch = this.format.match(/{{date:(.*?)}}/);
-        return dateFormatMatch ? dateFormatMatch[1] : 'YYYY/MM/DD HH:mm:ss';
     }
 }
 exports.default = Logger;
