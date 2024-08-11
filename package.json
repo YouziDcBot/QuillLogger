@@ -1,0 +1,22 @@
+{
+  "name": "logger",
+  "version": "0.0.1",
+  "description": "自由型logger紀錄",
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "logger"
+  ],
+  "author": "柚子Youzi",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.2.0",
+    "colors": "^1.4.0",
+    "logger": "file:",
+    "moment": "^2.30.1"
+  }
+}
