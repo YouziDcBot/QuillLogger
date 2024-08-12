@@ -84,7 +84,7 @@ class Logger {
         const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
         formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
             let value = '';
-            console.log(_, key, style, dateFormat);
+            // console.log(_, key, style, dateFormat);
             switch (key) {
                 case 'prefix':
                     value = this.level[level].prefix;

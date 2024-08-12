@@ -86,7 +86,7 @@ export default class Logger<T extends string> {
             (_, key: string, style: string, dateFormat: string) => {
                 let value = '';
 
-                console.log(_, key, style, dateFormat);
+                // console.log(_, key, style, dateFormat);
                 switch (key) {
                     case 'prefix':
                         value = this.level[level].prefix;
