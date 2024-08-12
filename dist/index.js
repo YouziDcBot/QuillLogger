@@ -44,7 +44,13 @@ class Logger {
      *             color: 'white',
      *             use: 'log'
      *             prefix: '[INFO]'
-     *             format: "{{prefix.blue}} {{date:HH:mm:ss}} {{msg}}",
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     *         },
+     *         Error: {
+     *             color: 'red',
+     *             use: 'error'
+     *             prefix: '[ERROR]'
+     *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}",
      *         }
      *     }
      * });
@@ -75,8 +81,10 @@ class Logger {
     }
     formatMessage(level, message) {
         let formatted = this.level[level].format || this.format;
-        formatted = formatted.replace(/{{(prefix|level|msg|date)(?:\.(\w+))?:?(.*?)}}/g, (_, key, color, dateFormat) => {
+        const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
+        formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
             let value = '';
+            console.log(_, key, style, dateFormat);
             switch (key) {
                 case 'prefix':
                     value = this.level[level].prefix;
@@ -93,7 +101,15 @@ class Logger {
                 default:
                     break;
             }
-            return color ? value[color] : value;
+            if (style) {
+                const styles = style.split('.');
+                for (const s of styles) {
+                    if (!value[s])
+                        throw new Error(`Invalid style: ${s}`);
+                    value = value[s];
+                }
+            }
+            return value;
         });
         return formatted;
     }

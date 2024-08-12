@@ -28,7 +28,13 @@ export default class Logger<T extends string> {
      *             color: 'white',
      *             use: 'log'
      *             prefix: '[INFO]'
-     *             format: "{{prefix.blue}} {{date:HH:mm:ss}} {{msg}}",
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     *         },
+     *         Error: {
+     *             color: 'red',
+     *             use: 'error'
+     *             prefix: '[ERROR]'
+     *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}",
      *         }
      *     }
      * });
