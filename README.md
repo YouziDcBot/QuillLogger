@@ -4,14 +4,14 @@ Welcome to the logger project!
 
 ## Description
 
-This project aims to provide a logging solution for your Discord bot. It allows you to easily log important events and messages for debugging and analysis purposes.
+This project aims to provide a logging solution for Discord bot Project. It allows you to easily log important events and messages for debugging and analysis purposes.
 
 ## Features
 
 -   Log message events
 -   Log error events
 -   Customize log format
--   Save logs to file
+-   Save logs to file (coming soon)
 
 ## Installation
 
