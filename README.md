@@ -28,19 +28,19 @@ To use the logger module in your Discord bot, follow these steps:
 ```javascript
 // Usage example
 const log = new Logger({
-    format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
+    format: "[{{prefix.gray}}] {{level}} {{date.gray:HH:mm:ss}}: {{msg}}",
     level: {
         Log: {
             color: 'white',
             use: 'log'
-            prefix: '[INFO]'
-            format: "{{prefix.blue}} {{date:HH:mm:ss} {{msg}}",
+            prefix: 'INFO'
+            format: "[{{prefix.blue.underline}}] {{date.gray:HH:mm:ss}: {{msg}}",
         },
-        Error: {
+        Error: {D
             color: 'red',
             use: 'error'
             prefix: '[ERROR]'
-            format: "{{prefix.red}} {{date.red:HH:mm:ss} {{msg.red}}",
+            format: "{{prefix.bold}} {{date:HH:mm:ss} {{msg}}",
         }
     }
 });

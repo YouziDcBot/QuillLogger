@@ -38,7 +38,13 @@ export default class Logger<T extends string> {
      *             color: 'white',
      *             use: 'log'
      *             prefix: '[INFO]'
-     *             format: "{{prefix.blue}} {{date:HH:mm:ss}} {{msg}}",
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     *         },
+     *         Error: {
+     *             color: 'red',
+     *             use: 'error'
+     *             prefix: '[ERROR]'
+     *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}",
      *         }
      *     }
      * });
@@ -73,28 +79,40 @@ export default class Logger<T extends string> {
     private formatMessage(level: T, message: string): string {
         let formatted = this.level[level].format || this.format;
 
-        formatted = formatted.replace(/{{(prefix|level|msg|date)(?:\.(\w+))?:?(.*?)}}/g, (_, key, color, dateFormat) => {
-            let value = '';
+        const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
 
-            switch (key) {
-                case 'prefix':
-                    value = this.level[level].prefix;
-                    break;
-                case 'level':
-                    value = level;
-                    break;
-                case 'msg':
-                    value = message;
-                    break;
-                case 'date':
-                    value = moment().format(dateFormat);
-                    break;
-                default:
-                    break;
-            }
+        formatted = formatted.replace(
+            searchValue,
+            (_, key: string, style: string, dateFormat: string) => {
+                let value = '';
 
-            return color ? value[color] : value;
-        });
+                console.log(_, key, style, dateFormat);
+                switch (key) {
+                    case 'prefix':
+                        value = this.level[level].prefix;
+                        break;
+                    case 'level':
+                        value = level;
+                        break;
+                    case 'msg':
+                        value = message;
+                        break;
+                    case 'date':
+                        value = moment().format(dateFormat);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (style) {
+                    const styles = style.split('.');
+                    for (const s of styles) {
+                        if (!(value as any)[s]) throw new Error(`Invalid style: ${s}`);
+                        value = (value as any)[s];
+                    }
+                }
+                return value;
+            });
 
         return formatted;
     }
