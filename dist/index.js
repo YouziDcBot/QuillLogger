@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const moment_1 = __importDefault(require("moment"));
 const color = __importStar(require("colors"));
+const events_1 = require("events");
 color.enable();
 /**
  * Logger class
@@ -57,6 +58,9 @@ class Logger {
      * log.log('Log', "hello world");
      */
     constructor(options) {
+        // super();
+        this.emitter = new events_1.EventEmitter();
+        this.debug = options.debug || false;
         this.format = options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
         this.level = options.level || {
             log: {
@@ -69,6 +73,8 @@ class Logger {
      * log
      * @param level The level of the log message
      * @param message The log message
+     * @example
+     * logger.log('Log', 'hello world');
      */
     log(level, message) {
         const levelConfig = this.level[level];
@@ -76,15 +82,48 @@ class Logger {
             throw new Error(`${level} is not a valid log level`);
         // const date = moment().format(this.extractDateFormat());
         const formattedMessage = this.formatMessage(level, message);
+        const timestamp = Date.now();
         const outputFn = console[levelConfig.use];
         outputFn(formattedMessage[levelConfig.color]);
+        // Emit the log event
+        this.emitter.emit(level, {
+            level,
+            message,
+            timestamp,
+            formattedMessage,
+        });
+    }
+    /**
+     * Add an event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    on(event, listener) {
+        this.emitter.on(event, listener);
+    }
+    /**
+     * Add a one-time event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    once(event, listener) {
+        this.emitter.once(event, listener);
+    }
+    /**
+     * Remove an event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    off(event, listener) {
+        this.emitter.off(event, listener);
     }
     formatMessage(level, message) {
         let formatted = this.level[level].format || this.format;
         const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
         formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
             let value = '';
-            // console.log(_, key, style, dateFormat);
+            if (this.debug)
+                console.debug("Replacer: ", _, key, style, dateFormat);
             switch (key) {
                 case 'prefix':
                     value = this.level[level].prefix;

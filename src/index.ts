@@ -1,24 +1,47 @@
 import moment from 'moment';
-import { Color } from 'colors';
-import { Console } from "console";
 import * as color from 'colors';
+import { EventEmitter } from 'events';
 
 color.enable();
 // moment.locale('en_us');
 
 interface LoggerOptions<T extends string = string> {
     format?: string;
+    debug?: boolean;
     level?: Level<T>;
 }
 
 type Level<T extends string = string> = {
     [K in T]: {
-        color: keyof Color;
+        color: keyof color.Color;
         use: keyof Console;
         prefix: string;
         format?: string;
     };
 };
+
+interface LoggerEvent<T extends string> {
+    level: T;
+    message: string;
+    timestamp: number;
+    formattedMessage: string;
+}
+
+/**
+ * Log listener type
+ * @template T
+ * @callback LogListener
+ * @param {T} level - The level of the log message, indicating its severity or category.
+ * @param {string} message - The content of the log message.
+ * @param {string} timestamp - The timestamp when the log message was created, formatted as a string.
+ * @param {string} formattedMessage - The message formatted according to the logger's configuration.
+ */
+type LogListener<T extends string> = (
+    level: T,
+    message: string,
+    timestamp: string,
+    formattedMessage: string
+) => void;
 
 /**
  * Logger class
@@ -26,6 +49,8 @@ type Level<T extends string = string> = {
 export default class Logger<T extends string> {
     private format: string;
     private level: Level<T>;
+    private emitter: EventEmitter;
+    private debug: boolean;
 
     /**
      * Logger constructor
@@ -51,6 +76,10 @@ export default class Logger<T extends string> {
      * log.log('Log', "hello world");
      */
     constructor(options: LoggerOptions<T>) {
+        // super();
+        this.emitter = new EventEmitter();
+
+        this.debug = options.debug || false;
         this.format = options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
         this.level = options.level || {
             log: {
@@ -64,6 +93,8 @@ export default class Logger<T extends string> {
      * log
      * @param level The level of the log message
      * @param message The log message
+     * @example
+     * logger.log('Log', 'hello world');
      */
     log(level: T, message: string): void {
         const levelConfig = this.level[level];
@@ -71,9 +102,43 @@ export default class Logger<T extends string> {
 
         // const date = moment().format(this.extractDateFormat());
         const formattedMessage = this.formatMessage(level, message);
-
+        const timestamp = Date.now();
         const outputFn = console[levelConfig.use] as (...args: any[]) => void;
         outputFn(formattedMessage[levelConfig.color]);
+
+        // Emit the log event
+        this.emitter.emit(level, {
+            level,
+            message,
+            timestamp,
+            formattedMessage,
+        } as LoggerEvent<T>);
+    }
+    /**
+     * Add an event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    on(event: T, listener: LogListener<T>): void {
+        this.emitter.on(event, listener);
+    }
+
+    /**
+     * Add a one-time event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    once(event: T, listener: LogListener<T>): void {
+        this.emitter.once(event, listener);
+    }
+
+    /**
+     * Remove an event listener for the event
+     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
+     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
+     */
+    off(event: T, listener: LogListener<T>): void {
+        this.emitter.off(event, listener);
     }
 
     private formatMessage(level: T, message: string): string {
@@ -86,7 +151,7 @@ export default class Logger<T extends string> {
             (_, key: string, style: string, dateFormat: string) => {
                 let value = '';
 
-                // console.log(_, key, style, dateFormat);
+                if (this.debug) console.debug("Replacer: ", _, key, style, dateFormat);
                 switch (key) {
                     case 'prefix':
                         value = this.level[level].prefix;
