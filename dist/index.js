@@ -36,9 +36,9 @@ color.enable();
 class Logger {
     /**
      * Logger constructor
-     * @param options The format and levels of the log message.
+     * @param {LoggerOptions<T>} options The format and levels of the log message.
      * @example
-     * const log = new Logger({
+     * const logger = new Logger({
      *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
      *     level: {
      *         Log: {
@@ -55,29 +55,37 @@ class Logger {
      *         }
      *     }
      * });
-     * log.log('Log', "hello world");
+     * logger.log('Log', "hello world");
      */
     constructor(options) {
         // super();
         this.emitter = new events_1.EventEmitter();
-        this.debug = options.debug || false;
-        this.format = options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
-        this.level = options.level || {
-            log: {
+        this.Logger_debugMode = options.debug || false;
+        this.Logger_format = options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
+        this.Logger_level = options.level || {
+            Info: {
                 color: 'white',
-                use: 'log',
+                use: 'info',
             }
         };
+        // return new Proxy(this, {
+        //     get: (target, prop: string) => {
+        //         if (prop in target) {
+        //             return (message: string) => this.log(prop as T, message);
+        //         }
+        //         return undefined;
+        //     }
+        // });
     }
     /**
      * log
-     * @param level The level of the log message
-     * @param message The log message
+     * @param {T} level The level of the log message
+     * @param {string} message The log message
      * @example
      * logger.log('Log', 'hello world');
      */
     log(level, message) {
-        const levelConfig = this.level[level];
+        const levelConfig = this.Logger_level[level];
         if (!levelConfig)
             throw new Error(`${level} is not a valid log level`);
         // const date = moment().format(this.extractDateFormat());
@@ -99,7 +107,7 @@ class Logger {
      * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
      */
     on(event, listener) {
-        this.emitter.on(event, listener);
+        this.emitter.on(`Logger_${event}`, listener);
     }
     /**
      * Add a one-time event listener for the event
@@ -107,7 +115,7 @@ class Logger {
      * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
      */
     once(event, listener) {
-        this.emitter.once(event, listener);
+        this.emitter.once(`Logger_${event}`, listener);
     }
     /**
      * Remove an event listener for the event
@@ -115,18 +123,25 @@ class Logger {
      * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
      */
     off(event, listener) {
-        this.emitter.off(event, listener);
+        this.emitter.off(`Logger_${event}`, listener);
+    }
+    /**
+     * Call an event listener for the event
+     * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
+     */
+    emit(event) {
+        this.emitter.emit(`Logger_${event}`);
     }
     formatMessage(level, message) {
-        let formatted = this.level[level].format || this.format;
+        let formatted = this.Logger_level[level].format || this.Logger_format;
         const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
         formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
             let value = '';
-            if (this.debug)
+            if (this.Logger_debugMode)
                 console.debug("Replacer: ", _, key, style, dateFormat);
             switch (key) {
                 case 'prefix':
-                    value = this.level[level].prefix;
+                    value = this.Logger_level[level].prefix;
                     break;
                 case 'level':
                     value = level;

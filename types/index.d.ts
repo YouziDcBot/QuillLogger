@@ -14,8 +14,9 @@ type Level<T extends string = string> = {
 };
 /**
  * Log listener type
+ * @type LogListener
  * @template T
- * @callback LogListener
+ * @callback void
  * @param {T} level - The level of the log message, indicating its severity or category.
  * @param {string} message - The content of the log message.
  * @param {string} timestamp - The timestamp when the log message was created, formatted as a string.
@@ -26,15 +27,15 @@ type LogListener<T extends string> = (level: T, message: string, timestamp: stri
  * Logger class
  */
 export default class Logger<T extends string> {
-    private format;
-    private level;
+    private Logger_format;
+    private Logger_level;
     private emitter;
-    private debug;
+    private Logger_debugMode;
     /**
      * Logger constructor
-     * @param options The format and levels of the log message.
+     * @param {LoggerOptions<T>} options The format and levels of the log message.
      * @example
-     * const log = new Logger({
+     * const logger = new Logger({
      *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
      *     level: {
      *         Log: {
@@ -51,13 +52,13 @@ export default class Logger<T extends string> {
      *         }
      *     }
      * });
-     * log.log('Log', "hello world");
+     * logger.log('Log', "hello world");
      */
     constructor(options: LoggerOptions<T>);
     /**
      * log
-     * @param level The level of the log message
-     * @param message The log message
+     * @param {T} level The level of the log message
+     * @param {string} message The log message
      * @example
      * logger.log('Log', 'hello world');
      */
@@ -80,6 +81,11 @@ export default class Logger<T extends string> {
      * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
      */
     off(event: T, listener: LogListener<T>): void;
+    /**
+     * Call an event listener for the event
+     * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
+     */
+    emit(event: T): void;
     private formatMessage;
 }
 export {};
