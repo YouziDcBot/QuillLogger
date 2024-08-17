@@ -117,7 +117,7 @@ export default class Logger<T extends string> {
         outputFn(formattedMessage[levelConfig.color]);
 
         // Emit the log event
-        this.emitter.emit(level, {
+        this.emitter.emit(`Logger_${level}`, {
             level,
             message,
             timestamp,
@@ -155,8 +155,8 @@ export default class Logger<T extends string> {
      * Call an event listener for the event
      * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
      */
-    emit(event: T): void {
-        this.emitter.emit(`Logger_${event}`);
+    emit(event: T, ...args: any): void {
+        this.emitter.emit(`Logger_${event}`, ...args);
     }
 
     private formatMessage(level: T, message: string): string {

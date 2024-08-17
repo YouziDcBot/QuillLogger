@@ -85,7 +85,7 @@ export default class Logger<T extends string> {
      * Call an event listener for the event
      * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
      */
-    emit(event: T): void;
+    emit(event: T, ...args: any): void;
     private formatMessage;
 }
 export {};

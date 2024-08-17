@@ -94,7 +94,7 @@ class Logger {
         const outputFn = console[levelConfig.use];
         outputFn(formattedMessage[levelConfig.color]);
         // Emit the log event
-        this.emitter.emit(level, {
+        this.emitter.emit(`Logger_${level}`, {
             level,
             message,
             timestamp,
@@ -129,8 +129,8 @@ class Logger {
      * Call an event listener for the event
      * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
      */
-    emit(event) {
-        this.emitter.emit(`Logger_${event}`);
+    emit(event, ...args) {
+        this.emitter.emit(`Logger_${event}`, ...args);
     }
     formatMessage(level, message) {
         let formatted = this.Logger_level[level].format || this.Logger_format;
