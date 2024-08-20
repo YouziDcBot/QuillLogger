@@ -1,4 +1,5 @@
-import * as color from 'colors';
+import * as color from "colors";
+import { LogListener } from "./handlers/event";
 interface LoggerOptions<T extends string = string> {
     format?: string;
     debug?: boolean;
@@ -13,80 +14,65 @@ type Level<T extends string = string> = {
     };
 };
 /**
- * Log listener type
- * @type LogListener
- * @template T
- * @callback void
- * @param {T} level - The level of the log message, indicating its severity or category.
- * @param {string} message - The content of the log message.
- * @param {string} timestamp - The timestamp when the log message was created, formatted as a string.
- * @param {string} formattedMessage - The message formatted according to the logger's configuration.
+ * Quill logger class
  */
-type LogListener<T extends string> = (level: T, message: string, timestamp: string, formattedMessage: string) => void;
-/**
- * Logger class
- */
-export default class Logger<T extends string> {
+declare class QuillLog<T extends string> {
     private Logger_format;
     private Logger_level;
     private emitter;
     private Logger_debugMode;
+    QuillLog: QuillLog<any>;
+    on: (event: T, listener: LogListener<T>) => void;
+    once: (event: T, listener: LogListener<T>) => void;
+    off: (event: T, listener: LogListener<T>) => void;
+    private emit;
     /**
-     * Logger constructor
+     * (>_β) Quill logger
      * @param {LoggerOptions<T>} options The format and levels of the log message.
      * @example
-     * const logger = new Logger({
+     * const quill = new QuillLog({
      *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
      *     level: {
      *         Log: {
      *             color: 'white',
-     *             use: 'log'
-     *             prefix: '[INFO]'
-     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     *             use: 'log',
+     *             prefix: '[INFO]',
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}"
      *         },
      *         Error: {
      *             color: 'red',
-     *             use: 'error'
-     *             prefix: '[ERROR]'
-     *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}",
+     *             use: 'error',
+     *             prefix: '[ERROR]',
+     *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
      *         }
      *     }
      * });
-     * logger.log('Log', "hello world");
+     *
+     * // this will print
+     * quill.log('Log', "hello %s!", "world"); // -> "[INFO] 00:00:00: hello world!"
+     * quill.log('Error', "error message"); // -> "[ERROR] 00:00:00: error message"
+     * // this will throw an error
+     * quill.log('Debug', "debugging"); // -> Error: "Debug is not a valid log level"
      */
     constructor(options: LoggerOptions<T>);
     /**
-     * log
+     * Quill log
      * @param {T} level The level of the log message
      * @param {string} message The log message
+     * @param {any[]} [optionalParams] Options parameters
      * @example
-     * logger.log('Log', 'hello world');
+     * quill.log('Log', 'hello %s!', 'world'); // -> 'hello world!'
      */
-    log(level: T, message: string): void;
-    /**
-     * Add an event listener for the event
-     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
-     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
-     */
-    on(event: T, listener: LogListener<T>): void;
-    /**
-     * Add a one-time event listener for the event
-     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
-     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
-     */
-    once(event: T, listener: LogListener<T>): void;
-    /**
-     * Remove an event listener for the event
-     * @param {T} event - The name of the event to listen to, which corresponds to the log level.
-     * @param {LogListener<T>} listener - The callback function that will be called when the event is emitted.
-     */
-    off(event: T, listener: LogListener<T>): void;
-    /**
-     * Call an event listener for the event
-     * @param {T} event  - The name of the event to listen to, which corresponds to the log level.
-     */
-    emit(event: T, ...args: any): void;
+    log(level: T, message?: any, ...optionalParams: any[]): void;
     private formatMessage;
+    /**
+     * getInstance - get instance of Quill Log
+     * @returns {QuillLog} The instance of Quill Log
+     * @version v0.0.1
+     * @deprecated v0.0.1 no longer supported
+     */
+    static getInstance(): QuillLog<any>;
 }
-export {};
+export default QuillLog;
+export { QuillLog };
 //# sourceMappingURL=index.d.ts.map

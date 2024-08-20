@@ -1,12 +1,13 @@
 {
-  "name": "logger",
-  "version": "0.0.1",
-  "description": "自由型logger紀錄",
+  "name": "quill.log",
+  "description": "自定義日誌輸出模塊，允許透過調用事件來導出日誌等相關資料",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "types": "types/index.d.ts",
   "scripts": {
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc ."
   },
   "keywords": [
     "logger"
@@ -17,6 +18,7 @@
     "@types/node": "^22.2.0",
     "colors": "^1.4.0",
     "logger": "file:",
-    "moment": "^2.30.1"
+    "moment": "^2.30.1",
+    "quill.log": "file:"
   }
 }
