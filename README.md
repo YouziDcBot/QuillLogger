@@ -1,4 +1,7 @@
-# <img src="QuillLog.png" alt="Quill Logger" width="50" height="50" style="border-radius: 50%; vertical-align: middle;"> Quill Logger
+<p>
+    <h1 align="center"> <img src="QuillLog.png" alt="Quill Logger" width="50" height="50" style="border-radius: 50%; vertical-align: middle;">
+     Quill Logger</h1>
+</p>
 
 Welcome to the Quill Logger project!
 
@@ -28,27 +31,27 @@ To use the logger module in your Discord bot, follow these steps:
 ```javascript
 // Usage example
 const q = new QuillLog({
-    format: "[{{prefix.gray}}] {{level}} {{date.gray:HH:mm:ss}}: {{msg}}",
-    level: {
-        Log: {
-            color: 'white',
-            use: 'log',
-            prefix: 'INFO',
-            format: "[{{prefix.blue.underline}}] {{date.gray:HH:mm:ss}: {{msg}}"
-        },
-        Error: {
-            color: 'red',
-            use: 'error',
-            prefix: '[ERROR]',
-            format: "{{prefix.bold}} {{date:HH:mm:ss} {{msg}}"
-        }
-    }
+	format: "[{{prefix.gray}}] {{level}} {{date.gray:HH:mm:ss}}: {{msg}}",
+	level: {
+		Log: {
+			color: "white",
+			use: "log",
+			prefix: "INFO",
+			format: "[{{prefix.blue.underline}}] {{date.gray:HH:mm:ss}: {{msg}}",
+		},
+		Error: {
+			color: "red",
+			use: "error",
+			prefix: "[ERROR]",
+			format: "{{prefix.bold}} {{date:HH:mm:ss} {{msg}}",
+		},
+	},
 });
-q.log('Log', "hello world");
+q.log("Log", "hello world");
 
 // Now only the defined levels can be used
-q.log('Log', "This is an informational message.");
-q.log('Error', "This is an error message.");
+q.log("Log", "This is an informational message.");
+q.log("Error", "This is an error message.");
 // q.log('Debug', "This will throw an error because 'Debug' is not defined.");
 ```
 
