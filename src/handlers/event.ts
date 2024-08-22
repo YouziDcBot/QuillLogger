@@ -28,7 +28,8 @@ export class LoggerEventEmitter<T extends string> extends EventEmitter {
      * @returns {void}
      */
     emitEvent(event: T, ...args: any): void {
-        this.emit(`Logger_${event}`, ...args);
+        if (!event.startsWith('Logger_'))
+            this.emit(`Logger_${event}`, ...args);
     }
 
     /**

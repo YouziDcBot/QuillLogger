@@ -15,7 +15,8 @@ class LoggerEventEmitter extends events_1.EventEmitter {
      * @returns {void}
      */
     emitEvent(event, ...args) {
-        this.emit(`Logger_${event}`, ...args);
+        if (!event.startsWith('Logger_'))
+            this.emit(`Logger_${event}`, ...args);
     }
     /**
      * Registers a listener for a specific logging event level.
