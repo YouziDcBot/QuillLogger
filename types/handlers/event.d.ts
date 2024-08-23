@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 export interface LoggerEvent<T extends string> {
     level: T;
     message: string;
@@ -11,7 +10,7 @@ export type LogListener<T extends string> = (level: T, message: string, optional
  * Custom event emitter for the Logger class.
  * @template T - The type of event level.
  */
-export declare class LoggerEventEmitter<T extends string> extends EventEmitter {
+export declare class LoggerEventEmitter<T extends string> {
     /**
      * Emits a logging event.
      * @param {T} event - The level of the logging event.

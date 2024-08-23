@@ -46,6 +46,14 @@ const q = new QuillLog({
 			format: "{{prefix.bold}} {{date:HH:mm:ss} {{msg}}",
 		},
 	},
+	// 即將推出(v0.2.0)
+	files: {
+        logDirectory: "./logs",
+        bufferSize: 100,
+        flushInterval: 1000,
+        maxFileSize: 1000,
+        retentionDays: 10
+    }
 });
 q.log("Log", "hello world");
 

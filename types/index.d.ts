@@ -1,9 +1,17 @@
 import * as color from "colors";
 import { LogListener } from "./handlers/event";
+import { FileLogger } from "./handlers/fileLog";
 interface LoggerOptions<T extends string = string> {
     format?: string;
     debug?: boolean;
     level?: Level<T>;
+    files?: {
+        logDirectory: string;
+        bufferSize: number;
+        flushInterval: number;
+        maxFileSize: number;
+        retentionDays: number;
+    };
 }
 type Level<T extends string = string> = {
     [K in T]: {
@@ -26,6 +34,7 @@ declare class QuillLog<T extends string> {
     once: (event: T, listener: LogListener<T>) => void;
     off: (event: T, listener: LogListener<T>) => void;
     private emit;
+    filelogger?: FileLogger;
     /**
      * (>_β) Quill logger
      * @param {LoggerOptions<T>} options The format and levels of the log message.
@@ -45,7 +54,15 @@ declare class QuillLog<T extends string> {
      *             prefix: '[ERROR]',
      *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
      *         }
-     *     }
+     *     },
+     * // 即將推出(v0.2.0)
+     * 	   files: {
+     * 	       logDirectory: "./logs",
+     * 	       bufferSize: 100,
+     * 	       flushInterval: 1000,
+     * 	       maxFileSize: 1000,
+     * 	       retentionDays: 10
+     * 	   }
      * });
      *
      * // this will print

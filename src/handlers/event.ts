@@ -16,11 +16,12 @@ export type LogListener<T extends string> = (
     formattedMessage: string
 ) => void;
 
+const eventLogger = new EventEmitter();
 /**
  * Custom event emitter for the Logger class.
  * @template T - The type of event level.
  */
-export class LoggerEventEmitter<T extends string> extends EventEmitter {
+export class LoggerEventEmitter<T extends string> {
     /**
      * Emits a logging event.
      * @param {T} event - The level of the logging event.
@@ -28,8 +29,7 @@ export class LoggerEventEmitter<T extends string> extends EventEmitter {
      * @returns {void}
      */
     emitEvent(event: T, ...args: any): void {
-        if (!event.startsWith('Logger_'))
-            this.emit(`Logger_${event}`, ...args);
+        eventLogger.emit(`Logger_${event}`, ...args);
     }
 
     /**
@@ -39,7 +39,7 @@ export class LoggerEventEmitter<T extends string> extends EventEmitter {
      * @returns {void}
      */
     onEvent(event: T, listener: LogListener<T>): void {
-        this.on(`Logger_${event}`, listener);
+        eventLogger.on(`Logger_${event}`, listener);
     }
 
     /**
@@ -49,7 +49,7 @@ export class LoggerEventEmitter<T extends string> extends EventEmitter {
      * @returns {void}
      */
     onceEvent(event: T, listener: LogListener<T>): void {
-        this.once(`Logger_${event}`, listener);
+        eventLogger.once(`Logger_${event}`, listener);
     }
 
     /**
@@ -59,7 +59,7 @@ export class LoggerEventEmitter<T extends string> extends EventEmitter {
      * @returns {void}
      */
     offEvent(event: T, listener: LogListener<T>): void {
-        this.off(`Logger_${event}`, listener);
+        eventLogger.off(`Logger_${event}`, listener);
     }
 
 }

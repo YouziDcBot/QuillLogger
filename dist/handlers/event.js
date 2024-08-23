@@ -3,11 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoggerEventEmitter = void 0;
 // handlers/event.ts
 const events_1 = require("events");
+const eventLogger = new events_1.EventEmitter();
 /**
  * Custom event emitter for the Logger class.
  * @template T - The type of event level.
  */
-class LoggerEventEmitter extends events_1.EventEmitter {
+class LoggerEventEmitter {
     /**
      * Emits a logging event.
      * @param {T} event - The level of the logging event.
@@ -15,8 +16,7 @@ class LoggerEventEmitter extends events_1.EventEmitter {
      * @returns {void}
      */
     emitEvent(event, ...args) {
-        if (!event.startsWith('Logger_'))
-            this.emit(`Logger_${event}`, ...args);
+        eventLogger.emit(`Logger_${event}`, ...args);
     }
     /**
      * Registers a listener for a specific logging event level.
@@ -25,7 +25,7 @@ class LoggerEventEmitter extends events_1.EventEmitter {
      * @returns {void}
      */
     onEvent(event, listener) {
-        this.on(`Logger_${event}`, listener);
+        eventLogger.on(`Logger_${event}`, listener);
     }
     /**
      * Registers a one-time listener for a specific logging event level.
@@ -34,7 +34,7 @@ class LoggerEventEmitter extends events_1.EventEmitter {
      * @returns {void}
      */
     onceEvent(event, listener) {
-        this.once(`Logger_${event}`, listener);
+        eventLogger.once(`Logger_${event}`, listener);
     }
     /**
      * Removes a listener for a specific logging event level.
@@ -43,7 +43,7 @@ class LoggerEventEmitter extends events_1.EventEmitter {
      * @returns {void}
      */
     offEvent(event, listener) {
-        this.off(`Logger_${event}`, listener);
+        eventLogger.off(`Logger_${event}`, listener);
     }
 }
 exports.LoggerEventEmitter = LoggerEventEmitter;

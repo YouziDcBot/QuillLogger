@@ -1,8 +1,10 @@
 import moment from "moment";
 import * as color from "colors";
 import util from "util";
-import { LoggerEventEmitter, LoggerEvent, LogListener } from "./handlers/event";
+
+import { LoggerEventEmitter, LogListener } from "./handlers/event";
 import { LoggerError } from "./handlers/error";
+import { FileLogger } from "./handlers/fileLog";
 
 color.enable();
 // moment.locale('en_us');
@@ -11,6 +13,13 @@ interface LoggerOptions<T extends string = string> {
 	format?: string;
 	debug?: boolean;
 	level?: Level<T>;
+	files?: {
+		logDirectory: string;
+		bufferSize: number;
+		flushInterval: number;
+		maxFileSize: number;
+		retentionDays: number;
+	};
 }
 
 type Level<T extends string = string> = {
@@ -36,7 +45,8 @@ class QuillLog<T extends string> {
 	public on: (event: T, listener: LogListener<T>) => void;
 	public once: (event: T, listener: LogListener<T>) => void;
 	public off: (event: T, listener: LogListener<T>) => void;
-	private emit: (level: T, event:  LoggerEvent<T>, ...args: any[]) => void;
+	private emit: (level: T, ...args: any) => void;
+	public filelogger?: FileLogger;
 
 	/**
 	 * (>_β) Quill logger
@@ -57,7 +67,15 @@ class QuillLog<T extends string> {
 	 *             prefix: '[ERROR]',
 	 *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
 	 *         }
-	 *     }
+	 *     },
+	 * // 即將推出(v0.2.0)
+	 * 	   files: {
+     * 	       logDirectory: "./logs",
+     * 	       bufferSize: 100,
+     * 	       flushInterval: 1000,
+     * 	       maxFileSize: 1000,
+     * 	       retentionDays: 10
+     * 	   }
 	 * });
 	 *
 	 * // this will print
@@ -81,10 +99,27 @@ class QuillLog<T extends string> {
 				},
 			} as Level<T>);
 
+		// events
 		this.on = this.emitter.onEvent;
 		this.once = this.emitter.onceEvent;
 		this.off = this.emitter.offEvent;
 		this.emit = this.emitter.emitEvent;
+		// file log
+		if (options.files) {
+			this.filelogger = new FileLogger(
+				options.files.logDirectory,
+				options.files.bufferSize,
+				options.files.flushInterval,
+				options.files.maxFileSize,
+				options.files.retentionDays
+			);
+			Object.keys(this.Logger_level).forEach((l) => {
+				this.on(l as T, (_level, _message, _optionalParams, _timestamp, formattedMessage) => {
+					this.filelogger?.log(formattedMessage);
+				});
+			});
+		}
+		// this
 		this.QuillLog = this;
 		// QuillLog.instance = this;
 		// return new Proxy(this, {
@@ -119,15 +154,14 @@ class QuillLog<T extends string> {
 		outputFn(formattedMessage[levelConfig.color]);
 
 		// Emit the log event
-		this.emit(level, 
-					{
-						level: level,
-						message: message,
-						optionalParams: optionalParams,
-						timestamp: timestamp,
-						formattedMessage: formattedMessage,
-            } as LoggerEvent<T>,
-				);
+		this.emit(
+			level,
+			level,
+			message,
+			optionalParams,
+			timestamp,
+			formattedMessage
+		);
 	}
 
 	private formatMessage(level: T, message: string): string {

@@ -32,6 +32,7 @@ const color = __importStar(require("colors"));
 const util_1 = __importDefault(require("util"));
 const event_1 = require("./handlers/event");
 const error_1 = require("./handlers/error");
+const fileLog_1 = require("./handlers/fileLog");
 color.enable();
 /**
  * Quill logger class
@@ -56,7 +57,15 @@ class QuillLog {
      *             prefix: '[ERROR]',
      *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
      *         }
-     *     }
+     *     },
+     * // 即將推出(v0.2.0)
+     * 	   files: {
+     * 	       logDirectory: "./logs",
+     * 	       bufferSize: 100,
+     * 	       flushInterval: 1000,
+     * 	       maxFileSize: 1000,
+     * 	       retentionDays: 10
+     * 	   }
      * });
      *
      * // this will print
@@ -79,10 +88,22 @@ class QuillLog {
                         use: "info",
                     },
                 };
+        // events
         this.on = this.emitter.onEvent;
         this.once = this.emitter.onceEvent;
         this.off = this.emitter.offEvent;
         this.emit = this.emitter.emitEvent;
+        // file log
+        if (options.files) {
+            this.filelogger = new fileLog_1.FileLogger(options.files.logDirectory, options.files.bufferSize, options.files.flushInterval, options.files.maxFileSize, options.files.retentionDays);
+            Object.keys(this.Logger_level).forEach((l) => {
+                this.on(l, (_level, _message, _optionalParams, _timestamp, formattedMessage) => {
+                    var _a;
+                    (_a = this.filelogger) === null || _a === void 0 ? void 0 : _a.log(formattedMessage);
+                });
+            });
+        }
+        // this
         this.QuillLog = this;
         // QuillLog.instance = this;
         // return new Proxy(this, {
@@ -112,13 +133,7 @@ class QuillLog {
         const outputFn = console[levelConfig.use];
         outputFn(formattedMessage[levelConfig.color]);
         // Emit the log event
-        this.emit(level, {
-            level: level,
-            message: message,
-            optionalParams: optionalParams,
-            timestamp: timestamp,
-            formattedMessage: formattedMessage,
-        });
+        this.emit(level, level, message, optionalParams, timestamp, formattedMessage);
     }
     formatMessage(level, message) {
         let formatted = this.Logger_level[level].format || this.Logger_format;
