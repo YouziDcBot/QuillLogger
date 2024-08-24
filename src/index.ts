@@ -72,7 +72,7 @@ class QuillLog<T extends string> {
 	 *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
 	 * 			   files: {
 	 * 			        name: "info {{date:YYYY-MM-DD}}.log",
-	 * 			        logDirectory: "logs/info"
+	 * 			        logDirectory: "./logs/info"
 	 * 			   }
 	 *         },
 	 *         Error: {
@@ -124,7 +124,6 @@ class QuillLog<T extends string> {
 			const levelConfigs: { [level: string]: LevelConfig } = {};
 			Object.keys(this.Logger_level).forEach((level) => {
 				const levelConfig = this.Logger_level[level as T];
-
 					levelConfigs[level] = {
 						logDirectory:
 							levelConfig.files?.logDirectory ||
@@ -135,7 +134,6 @@ class QuillLog<T extends string> {
 							options.files?.logName ||
 							"{{date:YYYY-MM-DD}}.log",
 					};
-				
 			});
 			this.filelogger = new FileLogger(levelConfigs);
 			Object.keys(this.Logger_level).forEach((level) => {

@@ -33,22 +33,38 @@ To use the logger module in your Discord bot, follow these steps:
 const q = new QuillLog({
 	format: "[{{prefix.gray}}] {{level}} {{date.gray:HH:mm:ss}}: {{msg}}",
 	level: {
-		Log: {
-			color: "white",
-			use: "log",
-			prefix: "INFO",
-			format: "[{{prefix.blue.underline}}] {{date.gray:HH:mm:ss}: {{msg}}",
-		},
-		Error: {
-			color: "red",
-			use: "error",
-			prefix: "[ERROR]",
-			format: "{{prefix.bold}} {{date:HH:mm:ss} {{msg}}",
-		},
-	},
-	// 即將推出(v0.2.0)
-	files: {
+        Log: {
+            color: "white",
+            use: 'log',
+            format: "[{{prefix.blue.underline.bold}}] {{date.gray.underline.bold:MM/DD HH:mm:ss}} {{msg.white}}",
+            prefix: "LOG-INFO",
+        },
+        Info: {
+            color: "white",
+            use: 'info',
+            format: "[{{prefix.blue.underline.bold}}] {{date.gray.underline.bold:MM/DD HH:mm:ss}} {{msg.white}}",
+            prefix: "INFO",
+            files: { // optional
+                name: "info {{date:YYYY-MM-DD}}.log",
+                logDirectory: "./logs/info"
+            }
+        },
+        Error: {
+            color: 'red',
+            use: 'error',
+            prefix: '[ERROR]',
+            format: "{{prefix.bold}} {{date:HH:mm:ss}} {{msg}}"
+        },
+        Debug: {
+            color: 'cyan',
+            use: 'debug',
+            prefix: '[DEBUG]',
+            format: "{{prefix.bold}} {{date:HH:mm:ss}} {{msg}}"
+        }
+    },
+    files: { // optional
         logDirectory: "./logs",
+        logName: "{{date:YYYY-MM-DD}}.log",
         bufferSize: 100,
         flushInterval: 1000,
         maxFileSize: 1000,

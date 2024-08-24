@@ -52,7 +52,7 @@ class QuillLog {
      *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
      * 			   files: {
      * 			        name: "info {{date:YYYY-MM-DD}}.log",
-     * 			        logDirectory: "logs/info"
+     * 			        logDirectory: "./logs/info"
      * 			   }
      *         },
      *         Error: {
