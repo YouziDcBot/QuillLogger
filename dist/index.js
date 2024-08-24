@@ -31,7 +31,7 @@ const moment_1 = __importDefault(require("moment"));
 const color = __importStar(require("colors"));
 const util_1 = __importDefault(require("util"));
 const event_1 = require("./handlers/event");
-const error_1 = require("./handlers/error");
+const errors_1 = require("./handlers/errors");
 const fileLog_1 = require("./handlers/fileLog");
 color.enable();
 /**
@@ -126,7 +126,7 @@ class QuillLog {
     log(level, message, ...optionalParams) {
         const levelConfig = this.Logger_level[level];
         if (!levelConfig)
-            throw error_1.LoggerError.ValidLogLevel(level);
+            throw errors_1.LoggerError.ValidLogLevel(level);
         // const date = moment().format(this.extractDateFormat());
         const formattedMessage = util_1.default.format(this.formatMessage(level, message), ...optionalParams);
         const timestamp = Date.now();
@@ -155,7 +155,7 @@ class QuillLog {
                 case "date":
                     value = (0, moment_1.default)().format(dateFormat);
                     if (!value)
-                        throw error_1.LoggerError.InvalidDateFormat(value);
+                        throw errors_1.LoggerError.InvalidDateFormat(value);
                     break;
                 default:
                     break;
@@ -164,7 +164,7 @@ class QuillLog {
                 const styles = style.split(".");
                 for (const s of styles) {
                     if (!value[s])
-                        throw error_1.LoggerError.InvalidStyle(s);
+                        throw errors_1.LoggerError.InvalidStyle(s);
                     value = value[s];
                 }
             }
@@ -179,7 +179,7 @@ class QuillLog {
      * @deprecated v0.0.1 no longer supported
      */
     static getInstance() {
-        throw error_1.LoggerError.NoLongerSupported();
+        throw errors_1.LoggerError.NoLongerSupported();
         // if (!QuillLog.instance) throw LoggerError.NoExistingInstance();
         // return QuillLog.instance;
     }

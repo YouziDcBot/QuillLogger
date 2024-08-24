@@ -2,6 +2,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as zlib from "node:zlib";
 
+import { LoggerError } from "./errors";
+
 class FileLogger {
 	private logDirectory: string;
 	private currentLogFilePath: string;
@@ -26,7 +28,7 @@ class FileLogger {
 	 */
 	constructor(
 		logDirectory: string = "logs",
-		bufferSize: number = 10,
+		bufferSize: number = 100,
 		flushInterval: number = 5000,
 		maxFileSize: number = 5 * 1024 * 1024,
 		retentionDays: number = 7
@@ -57,8 +59,7 @@ class FileLogger {
 			this.buffer = [];
 			fs.appendFile(this.currentLogFilePath, logContent, (err) => {
 				if (err) {
-					// TO-DO: 需要自定義錯誤填充
-					console.error("Failed to write log:", err);
+					LoggerError.LogFileError(err)
 				}
 			});
 		}
@@ -78,13 +79,11 @@ class FileLogger {
 	private rotateFile() {
 		fs.stat(this.currentLogFilePath, (err, stats) => {
 			if (err) {
-				// TO-DO: 需要自定義錯誤填充
-				console.error("Failed to get log file stats:", err);
+				LoggerError.LogFileError(err)
 				if (!fs.existsSync(this.currentLogFilePath)) {
 					fs.appendFile(this.currentLogFilePath, "", (err) => {
 						if (err) {
-							// TO-DO: 需要自定義錯誤填充
-							console.error("Failed to create log file:", err);
+							LoggerError.LogFileError(err)
 						}
 					});
 				}
@@ -102,17 +101,12 @@ class FileLogger {
 					.pipe(writeStream)
 					.on("finish", (err: any) => {
 						if (err) {
-							// TO-DO: 需要自定義錯誤填充
-							console.error("Failed to compress log file:", err);
+							LoggerError.LogFileError(err)
 							return;
 						}
 						fs.unlink(this.currentLogFilePath, (err) => {
 							if (err) {
-								// TO-DO: 需要自定義錯誤填充
-								console.error(
-									"Failed to delete original log file:",
-									err
-								);
+								LoggerError.LogFileError(err)
 							}
 						});
 					});
@@ -136,8 +130,7 @@ class FileLogger {
 			const filePath = path.join(this.logDirectory, file);
 			fs.stat(filePath, (err, stats) => {
 				if (err) {
-					// TO-DO: 需要自定義錯誤填充
-					console.error("Failed to get file stats:", err);
+					LoggerError.LogFileError(err)
 					return;
 				}
 
@@ -147,11 +140,7 @@ class FileLogger {
 				if (fileAge > retentionTime) {
 					fs.unlink(filePath, (err) => {
 						if (err) {
-							// TO-DO: 需要自定義錯誤填充
-							console.error(
-								"Failed to delete old log file:",
-								err
-							);
+							LoggerError.LogFileError(err)
 						}
 					});
 				}
@@ -170,7 +159,7 @@ class FileLogger {
 		if (optionalParams.length) {
 			formattedMessage +=
 				" " +
-				optionalParams.map((param) => JSON.stringify(param)).join(" ");
+				optionalParams.map((param) => JSON.stringify(param)).join("\n");
 		}
 		this.buffer.push(formattedMessage);
 

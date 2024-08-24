@@ -3,7 +3,7 @@ import * as color from "colors";
 import util from "util";
 
 import { LoggerEventEmitter, LogListener } from "./handlers/event";
-import { LoggerError } from "./handlers/error";
+import { LoggerError } from "./handlers/errors";
 import { FileLogger } from "./handlers/fileLog";
 
 color.enable();

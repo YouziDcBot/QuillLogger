@@ -5,6 +5,7 @@ export declare class LoggerError extends Error {
     static InvalidStyle(style: string): LoggerError;
     /** @deprecated getInstance() is no longer supported */
     static NoExistingInstance(): LoggerError;
+    static LogFileError(err: NodeJS.ErrnoException): LoggerError;
     private constructor();
 }
-//# sourceMappingURL=error.d.ts.map
+//# sourceMappingURL=errors.d.ts.map

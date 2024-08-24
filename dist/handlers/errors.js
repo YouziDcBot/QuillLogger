@@ -9,19 +9,22 @@ class LoggerError extends Error {
         return new LoggerError(`${level} is not a valid log level`);
     }
     static InvalidDateFormat(input) {
-        return new LoggerError(`Invalid date format: ${input || 'unknown'}`);
+        return new LoggerError(`Invalid date format: ${input || "unknown"}`);
     }
     static InvalidStyle(style) {
         return new LoggerError(`Invalid style: ${style}`);
     }
     /** @deprecated getInstance() is no longer supported */
     static NoExistingInstance() {
-        return new LoggerError('No existing instance of Quill');
+        return new LoggerError("No existing instance of Quill");
+    }
+    static LogFileError(err) {
+        return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
     }
     constructor(message) {
         super(message);
-        this.name = 'LoggerError';
+        this.name = "Quill#LoggerError";
     }
 }
 exports.LoggerError = LoggerError;
-//# sourceMappingURL=error.js.map
+//# sourceMappingURL=errors.js.map
