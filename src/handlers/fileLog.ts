@@ -1,172 +1,232 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as zlib from "node:zlib";
-
+import moment from "moment";
 import { LoggerError } from "./errors";
 
+interface LevelConfig {
+    logDirectory: string;
+    logName: string;
+}
+
 class FileLogger {
-	private logDirectory: string;
-	private currentLogFilePath: string;
-	private buffer: string[] = [];
-	private bufferSize: number;
-	private flushInterval: number;
-	private maxFileSize: number;
-	private retentionDays: number;
+    private logDirectories: Map<string, string> = new Map();
+    private logNames: Map<string, string> = new Map();
+	private currentLogFilePaths: Map<string, string> = new Map();
+	private logBuffers: Map<string, string[]> = new Map();
+    private bufferSize: number;
+    private flushInterval: number;
+    private maxFileSize: number;
+    private retentionDays: number;
+    private intervals: { [key: string]: NodeJS.Timeout | undefined } = {};
 
-	/**
-	 *
-	 * @param logDirectory The directory where log files will be stored.
-	 * @param bufferSize The number of log messages to buffer before flushing to the log file.
-	 * @param flushInterval The interval (in milliseconds) at which the log buffer will be flushed to the log file.
-	 * @param maxFileSize The maximum size (in bytes) of a log file before it is rotated and compressed.
-	 * @param retentionDays The number of days to retain log files before deleting them.
-	 * @version v0.2.0 - 即將推出
-	 * @summary 這是一個簡單的文件記錄器，用於將日誌消息寫入文件。它支持日誌文件的旋轉和壓縮，以及舊日誌文件的刪除。
-	 * @example
-	 * // nothing here :/
-	 *
-	 */
-	constructor(
-		logDirectory: string = "logs",
-		bufferSize: number = 100,
-		flushInterval: number = 5000,
-		maxFileSize: number = 5 * 1024 * 1024,
-		retentionDays: number = 7
-	) {
-		this.logDirectory = path.join(__dirname, "../..", logDirectory);
-		if (!fs.existsSync(this.logDirectory)) {
-			fs.mkdirSync(this.logDirectory);
-		}
-		this.currentLogFilePath = this.getNewLogFilePath();
-		this.bufferSize = bufferSize;
-		this.flushInterval = flushInterval;
-		this.maxFileSize = maxFileSize;
+    constructor(
+        private levelConfigs: { [level: string]: LevelConfig },
+        bufferSize: number = 100,
+        flushInterval: number = 5000,
+        maxFileSize: number = 5 * 1024 * 1024,
+        retentionDays: number = 7
+    ) {
+        this.bufferSize = bufferSize;
+        this.flushInterval = flushInterval;
+        this.maxFileSize = maxFileSize;
 		this.retentionDays = retentionDays;
-		this.startBufferFlush();
-		this.startFileRotation();
-		this.startLogCleanup();
-	}
+        Object.keys(this.levelConfigs).forEach(level => {
+            const config = this.levelConfigs[level];
+            const logDirectory = path.join(__dirname, "../..", config.logDirectory);
+            if (!fs.existsSync(logDirectory)) {
+                fs.mkdirSync(logDirectory);
+            }
+            this.logDirectories.set(level, logDirectory);
+            this.logNames.set(level, config.logName);
+			this.currentLogFilePaths.set(level, this.getNewLogFilePath(level));
+			this.logBuffers.set(level, []);
+            this.startBufferFlush(level);
+            this.startFileRotation(level);
+        });
 
-	private formatMessage(formatMsg: string): string {
-		// remove ANSI 控制碼（包括顏色、粗體、下劃線等）
-		const ansiRegex = /\u001b\[[0-9;]*m/g;
-		return formatMsg.replace(ansiRegex, "");
-	}
+        this.startLogCleanup();
+        this.handleProcessExit();
+    }
 
-	private flushBuffer() {
-		if (this.buffer.length > 0) {
-			const logContent = this.buffer.join("\n") + "\n";
-			this.buffer = [];
-			fs.appendFile(this.currentLogFilePath, logContent, (err) => {
-				if (err) {
-					LoggerError.LogFileError(err)
-				}
-			});
-		}
-	}
+    private formatMessage(formatMsg: string): string {
+        // remove ANSI 控制碼（包括顏色、粗體、下劃線等）
+        const ansiRegex = /\u001b\[[0-9;]*m/g;
+        return formatMsg.replace(ansiRegex, "");
+    }
 
-	private startBufferFlush() {
-		setInterval(() => {
-			this.flushBuffer();
-		}, this.flushInterval);
-	}
+    private formatDate(message: string): string {
+        const searchValue = /{{(date):?(.*?)}}/g;
+        message = message.replace(
+            searchValue,
+            (_, key: string, dateFormat: string) => {
+                let value = "";
+                switch (key) {
+                    case "date":
+                        value = moment().format(dateFormat);
+                        if (!value) throw LoggerError.InvalidDateFormat(value);
+                        break;
+                    default:
+                        break;
+                }
+                return value;
+            }
+        );
+        return message;
+    }
 
-	private getNewLogFilePath(): string {
-		const timestamp = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-		return path.join(this.logDirectory, `${timestamp}.log`);
-	}
+    private flushBuffer(level: string) {
+        const buffer = this.logBuffers.get(level) || [];
+        const logFilePath = this.currentLogFilePaths.get(level);
+		if (!logFilePath) return;
+		if (buffer.length === 0) return;
 
-	private rotateFile() {
-		fs.stat(this.currentLogFilePath, (err, stats) => {
-			if (err) {
-				LoggerError.LogFileError(err)
-				if (!fs.existsSync(this.currentLogFilePath)) {
-					fs.appendFile(this.currentLogFilePath, "", (err) => {
-						if (err) {
-							LoggerError.LogFileError(err)
-						}
-					});
-				}
-				return;
-			}
+        const logContent = buffer.join("\n") + "\n";
+        buffer.length = 0; // Clear the buffer
 
-			if (stats.size >= this.maxFileSize) {
-				const gzippedFilePath = `${this.currentLogFilePath}.gz`;
-				const readStream = fs.createReadStream(this.currentLogFilePath);
-				const writeStream = fs.createWriteStream(gzippedFilePath);
-				const gzip = zlib.createGzip();
+        fs.appendFile(logFilePath, logContent, (err) => {
+            if (err) {
+                LoggerError.LogFileError(err);
+            }
+        });
+    }
 
-				readStream
-					.pipe(gzip)
-					.pipe(writeStream)
-					.on("finish", (err: any) => {
-						if (err) {
-							LoggerError.LogFileError(err)
-							return;
-						}
-						fs.unlink(this.currentLogFilePath, (err) => {
-							if (err) {
-								LoggerError.LogFileError(err)
-							}
-						});
-					});
+    private startBufferFlush(level: string) {
+        this.intervals[level] = setInterval(() => {
+            this.flushBuffer(level);
+        }, this.flushInterval);
+    }
 
-				this.currentLogFilePath = this.getNewLogFilePath();
-			}
-		});
-	}
+    private getNewLogFilePath(level: string): string {
+        const logName = this.formatDate(this.logNames.get(level) || "{{date:YYYY-MM-DD}}.log");
+        const logDirectory = this.logDirectories.get(level);
+        return path.join(logDirectory || '', logName);
+    }
 
-	private startFileRotation() {
-		setInterval(() => {
-			this.rotateFile();
-		}, this.flushInterval);
-	}
+    private rotateFile(level: string) {
+        const logFilePath = this.currentLogFilePaths.get(level);
+        if (!logFilePath) return;
 
-	private deleteOldLogs() {
-		const files = fs.readdirSync(this.logDirectory);
-		const now = Date.now();
+        fs.stat(logFilePath, (err, stats) => {
+            if (err) {
+                LoggerError.LogFileError(err);
+                if (!fs.existsSync(logFilePath)) {
+                    fs.appendFile(logFilePath, "", (err) => {
+                        if (err) {
+                            LoggerError.LogFileError(err);
+                        }
+                    });
+                }
+                return;
+            }
 
-		files.forEach((file) => {
-			const filePath = path.join(this.logDirectory, file);
-			fs.stat(filePath, (err, stats) => {
-				if (err) {
-					LoggerError.LogFileError(err)
-					return;
-				}
+            if (stats.size >= this.maxFileSize) {
+                const rotatedFilePath = this.getRotatedFilePath(logFilePath);
+                fs.rename(logFilePath, rotatedFilePath, (err) => {
+                    if (err) {
+                        LoggerError.LogFileError(err);
+                    }
+                });
 
-				const fileAge = now - stats.mtimeMs;
-				const retentionTime = this.retentionDays * 24 * 60 * 60 * 1000; // days to milliseconds
+                this.currentLogFilePaths.set(level, this.getNewLogFilePath(level));
+            }
+        });
+    }
 
-				if (fileAge > retentionTime) {
-					fs.unlink(filePath, (err) => {
-						if (err) {
-							LoggerError.LogFileError(err)
-						}
-					});
-				}
-			});
-		});
-	}
+    private getRotatedFilePath(filePath: string): string {
+        let index = 1;
+        let newFilePath = filePath.replace(/(\.log)$/, `_${index}$1`);
 
-	private startLogCleanup() {
-		setInterval(() => {
-			this.deleteOldLogs();
-		}, 24 * 60 * 60 * 1000); // 每天執行一次清理
-	}
+        while (fs.existsSync(newFilePath)) {
+            index++;
+            newFilePath = filePath.replace(/(\.log)$/, `_${index}$1`);
+        }
 
-	log(message: string, ...optionalParams: any[]): void {
-		let formattedMessage = this.formatMessage(message);
-		if (optionalParams.length) {
-			formattedMessage +=
-				" " +
-				optionalParams.map((param) => JSON.stringify(param)).join("\n");
-		}
-		this.buffer.push(formattedMessage);
+        return newFilePath;
+    }
 
-		if (this.buffer.length >= this.bufferSize) {
-			this.flushBuffer();
-		}
-	}
+    private startFileRotation(level: string) {
+        this.intervals[level] = setInterval(() => {
+            this.rotateFile(level);
+        }, this.flushInterval);
+    }
+
+    private deleteOldLogs() {
+        const now = Date.now();
+
+        Object.values(this.logDirectories).forEach(directory => {
+            const files = fs.readdirSync(directory);
+
+            files.forEach((file) => {
+                const filePath = path.join(directory, file);
+                fs.stat(filePath, (err, stats) => {
+                    if (err) {
+                        LoggerError.LogFileError(err);
+                        return;
+                    }
+
+                    const fileAge = now - stats.mtimeMs;
+                    const retentionTime = this.retentionDays * 24 * 60 * 60 * 1000;
+
+                    if (fileAge > retentionTime) {
+                        fs.unlink(filePath, (err) => {
+                            if (err) {
+                                LoggerError.LogFileError(err);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    private startLogCleanup() {
+        setInterval(() => {
+            this.deleteOldLogs();
+        }, 24 * 60 * 60 * 1000); // 每天執行一次清理
+    }
+
+    private shutdown() {
+        Object.keys(this.levelConfigs).forEach(level => {
+            this.flushBuffer(level);
+            clearInterval(this.intervals[level]);
+        });
+
+        Object.keys(this.intervals).forEach(key => {
+            const timerId = this.intervals[key];
+            if (timerId) clearInterval(timerId);
+        });
+    }
+
+    private handleProcessExit() {
+        process.on("exit", () => {
+            this.shutdown();
+        });
+        process.on("SIGINT", () => {
+            this.shutdown();
+        });
+        process.on("SIGTERM", () => {
+            this.shutdown();
+        });
+    }
+
+    log(level: string, message: string, ...optionalParams: any[]): void {
+        let formattedMessage = this.formatMessage(message);
+        if (optionalParams.length) {
+            formattedMessage +=
+                " " +
+                optionalParams.map(param => JSON.stringify(param)).join("\n");
+        }
+
+        const buffer = this.logBuffers.get(level);
+        if (buffer) {
+            buffer.push(formattedMessage);
+
+            if (buffer.length >= this.bufferSize) {
+                this.flushBuffer(level);
+            }
+        }
+    }
 }
 
 export default FileLogger;

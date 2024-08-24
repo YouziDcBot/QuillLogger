@@ -7,6 +7,7 @@ interface LoggerOptions<T extends string = string> {
     level?: Level<T>;
     files?: {
         logDirectory: string;
+        logName?: string;
         bufferSize: number;
         flushInterval: number;
         maxFileSize: number;
@@ -19,6 +20,10 @@ type Level<T extends string = string> = {
         use: keyof Console;
         prefix: string;
         format?: string;
+        files?: {
+            name: string;
+            logDirectory: string;
+        };
     };
 };
 /**
@@ -46,7 +51,11 @@ declare class QuillLog<T extends string> {
      *             color: 'white',
      *             use: 'log',
      *             prefix: '[INFO]',
-     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}"
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     * 			   files: {
+     * 			        name: "info {{date:YYYY-MM-DD}}.log",
+     * 			        logDirectory: "logs/info"
+     * 			   }
      *         },
      *         Error: {
      *             color: 'red',
@@ -55,9 +64,9 @@ declare class QuillLog<T extends string> {
      *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
      *         }
      *     },
-     * // 即將推出(v0.2.0)
      * 	   files: {
      * 	       logDirectory: "./logs",
+     * 		   logName: "{{date:YYYY-MM-DD}}.log",
      * 	       bufferSize: 100,
      * 	       flushInterval: 1000,
      * 	       maxFileSize: 1000,

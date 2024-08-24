@@ -6,6 +6,7 @@ export declare class LoggerError extends Error {
     /** @deprecated getInstance() is no longer supported */
     static NoExistingInstance(): LoggerError;
     static LogFileError(err: NodeJS.ErrnoException): LoggerError;
+    static LogShutdown(): LoggerError;
     private constructor();
 }
 //# sourceMappingURL=errors.d.ts.map

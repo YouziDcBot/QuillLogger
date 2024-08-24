@@ -15,6 +15,7 @@ interface LoggerOptions<T extends string = string> {
 	level?: Level<T>;
 	files?: {
 		logDirectory: string;
+		logName?: string;
 		bufferSize: number;
 		flushInterval: number;
 		maxFileSize: number;
@@ -28,8 +29,17 @@ type Level<T extends string = string> = {
 		use: keyof Console;
 		prefix: string;
 		format?: string;
+		files?: {
+			name: string;
+			logDirectory: string;
+		};
 	};
 };
+
+interface LevelConfig {
+	logDirectory: string;
+	logName: string;
+}
 
 /**
  * Quill logger class
@@ -59,7 +69,11 @@ class QuillLog<T extends string> {
 	 *             color: 'white',
 	 *             use: 'log',
 	 *             prefix: '[INFO]',
-	 *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}"
+	 *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+	 * 			   files: {
+	 * 			        name: "info {{date:YYYY-MM-DD}}.log",
+	 * 			        logDirectory: "logs/info"
+	 * 			   }
 	 *         },
 	 *         Error: {
 	 *             color: 'red',
@@ -68,14 +82,14 @@ class QuillLog<T extends string> {
 	 *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
 	 *         }
 	 *     },
-	 * // 即將推出(v0.2.0)
 	 * 	   files: {
-     * 	       logDirectory: "./logs",
-     * 	       bufferSize: 100,
-     * 	       flushInterval: 1000,
-     * 	       maxFileSize: 1000,
-     * 	       retentionDays: 10
-     * 	   }
+	 * 	       logDirectory: "./logs",
+	 * 		   logName: "{{date:YYYY-MM-DD}}.log",
+	 * 	       bufferSize: 100,
+	 * 	       flushInterval: 1000,
+	 * 	       maxFileSize: 1000,
+	 * 	       retentionDays: 10
+	 * 	   }
 	 * });
 	 *
 	 * // this will print
@@ -106,17 +120,40 @@ class QuillLog<T extends string> {
 		this.emit = this.emitter.emitEvent;
 		// file log
 		if (options.files) {
-			this.filelogger = new FileLogger(
-				options.files.logDirectory,
-				options.files.bufferSize,
-				options.files.flushInterval,
-				options.files.maxFileSize,
-				options.files.retentionDays
-			);
-			Object.keys(this.Logger_level).forEach((l) => {
-				this.on(l as T, (_level, _message, _optionalParams, _timestamp, formattedMessage) => {
-					this.filelogger?.log(formattedMessage);
-				});
+			// 提取 LevelConfig 配置
+			const levelConfigs: { [level: string]: LevelConfig } = {};
+			Object.keys(this.Logger_level).forEach((level) => {
+				const levelConfig = this.Logger_level[level as T];
+
+					levelConfigs[level] = {
+						logDirectory:
+							levelConfig.files?.logDirectory ||
+							options.files?.logDirectory ||
+							"log",
+						logName:
+							levelConfig.files?.name ||
+							options.files?.logName ||
+							"{{date:YYYY-MM-DD}}.log",
+					};
+				
+			});
+			this.filelogger = new FileLogger(levelConfigs);
+			Object.keys(this.Logger_level).forEach((level) => {
+				this.on(
+					level as T,
+					(
+						level,
+						_message,
+						_optionalParams,
+						_timestamp,
+						formatMessage
+					) => {
+						this.filelogger?.log(
+							level,
+							formatMessage
+						);
+					}
+				);
 			});
 		}
 		// this
@@ -164,8 +201,8 @@ class QuillLog<T extends string> {
 		);
 	}
 
-	private formatMessage(level: T, message: string): string {
-		let formatted = this.Logger_level[level].format || this.Logger_format;
+	private formatMessage(level: T = "" as T, message: string): string {
+		let formatted = this.Logger_level[level]?.format || this.Logger_format;
 
 		const searchValue =
 			/{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;

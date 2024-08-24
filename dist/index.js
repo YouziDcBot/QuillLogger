@@ -49,7 +49,11 @@ class QuillLog {
      *             color: 'white',
      *             use: 'log',
      *             prefix: '[INFO]',
-     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}"
+     *             format: "{{prefix.blue.bold}} {{date.gray:HH:mm:ss}}: {{msg}}",
+     * 			   files: {
+     * 			        name: "info {{date:YYYY-MM-DD}}.log",
+     * 			        logDirectory: "logs/info"
+     * 			   }
      *         },
      *         Error: {
      *             color: 'red',
@@ -58,9 +62,9 @@ class QuillLog {
      *             format: "{{prefix.bold}} {{date:HH:mm:ss}}: {{msg}}"
      *         }
      *     },
-     * // 即將推出(v0.2.0)
      * 	   files: {
      * 	       logDirectory: "./logs",
+     * 		   logName: "{{date:YYYY-MM-DD}}.log",
      * 	       bufferSize: 100,
      * 	       flushInterval: 1000,
      * 	       maxFileSize: 1000,
@@ -95,11 +99,25 @@ class QuillLog {
         this.emit = this.emitter.emitEvent;
         // file log
         if (options.files) {
-            this.filelogger = new fileLog_1.FileLogger(options.files.logDirectory, options.files.bufferSize, options.files.flushInterval, options.files.maxFileSize, options.files.retentionDays);
-            Object.keys(this.Logger_level).forEach((l) => {
-                this.on(l, (_level, _message, _optionalParams, _timestamp, formattedMessage) => {
+            // 提取 LevelConfig 配置
+            const levelConfigs = {};
+            Object.keys(this.Logger_level).forEach((level) => {
+                var _a, _b, _c, _d;
+                const levelConfig = this.Logger_level[level];
+                levelConfigs[level] = {
+                    logDirectory: ((_a = levelConfig.files) === null || _a === void 0 ? void 0 : _a.logDirectory) ||
+                        ((_b = options.files) === null || _b === void 0 ? void 0 : _b.logDirectory) ||
+                        "log",
+                    logName: ((_c = levelConfig.files) === null || _c === void 0 ? void 0 : _c.name) ||
+                        ((_d = options.files) === null || _d === void 0 ? void 0 : _d.logName) ||
+                        "{{date:YYYY-MM-DD}}.log",
+                };
+            });
+            this.filelogger = new fileLog_1.FileLogger(levelConfigs);
+            Object.keys(this.Logger_level).forEach((level) => {
+                this.on(level, (level, _message, _optionalParams, _timestamp, formatMessage) => {
                     var _a;
-                    (_a = this.filelogger) === null || _a === void 0 ? void 0 : _a.log(formattedMessage);
+                    (_a = this.filelogger) === null || _a === void 0 ? void 0 : _a.log(level, formatMessage);
                 });
             });
         }
@@ -135,8 +153,9 @@ class QuillLog {
         // Emit the log event
         this.emit(level, level, message, optionalParams, timestamp, formattedMessage);
     }
-    formatMessage(level, message) {
-        let formatted = this.Logger_level[level].format || this.Logger_format;
+    formatMessage(level = "", message) {
+        var _a;
+        let formatted = ((_a = this.Logger_level[level]) === null || _a === void 0 ? void 0 : _a.format) || this.Logger_format;
         const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
         formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
             let value = "";

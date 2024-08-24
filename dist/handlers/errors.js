@@ -21,6 +21,9 @@ class LoggerError extends Error {
     static LogFileError(err) {
         return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
     }
+    static LogShutdown() {
+        return new LoggerError("Logger was shut down");
+    }
     constructor(message) {
         super(message);
         this.name = "Quill#LoggerError";

@@ -17,7 +17,10 @@ export class LoggerError extends Error {
 	}
 	static LogFileError(err: NodeJS.ErrnoException): LoggerError {
 		return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
-	}
+    }
+    static LogShutdown(): LoggerError {
+        return new LoggerError("Logger was shut down");
+    }
 
 	private constructor(message: string) {
 		super(message);
