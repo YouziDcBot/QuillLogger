@@ -177,6 +177,11 @@ class FileLogger {
         }, 24 * 60 * 60 * 1000); // 每天執行一次清理
     }
     shutdown() {
+        // 停止接受
+        this.log = () => {
+            throw errors_1.LoggerError.LogShutdown();
+        };
+        // 清空緩衝區並清除計時
         Object.keys(this.levelConfigs).forEach(level => {
             this.flushBuffer(level);
             clearInterval(this.intervals[level]);

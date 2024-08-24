@@ -26,40 +26,42 @@ export class LoggerEventEmitter<T extends string> {
      * Emits a logging event.
      * @param {T} event - The level of the logging event.
      * @param {LoggerEvent<T>} args - The logging event to emit.
-     * @returns {void}
+     * @returns {boolean} - Whether the event
      */
-    emitEvent(event: T, ...args: any): void {
-        eventLogger.emit(`Logger_${event}`, ...args);
+    emitEvent(event: T, ...args: any): boolean {
+        return eventLogger.emit(`Logger_${event}`, ...args);
     }
 
     /**
      * Registers a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {listener}
      */
-    onEvent(event: T, listener: LogListener<T>): void {
+    onEvent(event: T, listener: LogListener<T>): LogListener<T> {
         eventLogger.on(`Logger_${event}`, listener);
+        return listener;
     }
 
     /**
      * Registers a one-time listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {LogListener<T>}
      */
-    onceEvent(event: T, listener: LogListener<T>): void {
+    onceEvent(event: T, listener: LogListener<T>): LogListener<T> {
         eventLogger.once(`Logger_${event}`, listener);
+        return listener;
     }
 
     /**
      * Removes a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to remove.
-     * @returns {void}
+     * @returns {EventEmitter}
      */
-    offEvent(event: T, listener: LogListener<T>): void {
-        eventLogger.off(`Logger_${event}`, listener);
+    offEvent(event: T, listener: LogListener<T>): EventEmitter {
+        return eventLogger.off(`Logger_${event}`, listener);
     }
 
 }

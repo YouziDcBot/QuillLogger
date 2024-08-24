@@ -187,6 +187,11 @@ class FileLogger {
     }
 
     private shutdown() {
+		// 停止接受
+		this.log = () => {
+			throw LoggerError.LogShutdown();
+        };
+        // 清空緩衝區並清除計時
         Object.keys(this.levelConfigs).forEach(level => {
             this.flushBuffer(level);
             clearInterval(this.intervals[level]);

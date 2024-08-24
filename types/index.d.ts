@@ -34,11 +34,12 @@ declare class QuillLog<T extends string> {
     private Logger_level;
     private emitter;
     private Logger_debugMode;
+    private Logger_events;
     QuillLog: QuillLog<any>;
-    on: (event: T, listener: LogListener<T>) => void;
-    once: (event: T, listener: LogListener<T>) => void;
-    off: (event: T, listener: LogListener<T>) => void;
-    private emit;
+    on: (event: T, listener: LogListener<T>) => LogListener<T>;
+    once: (event: T, listener: LogListener<T>) => LogListener<T>;
+    off: (event: T, listener: LogListener<T>) => import("events");
+    emit: (event: T, ...args: any) => boolean;
     filelogger?: FileLogger;
     /**
      * (>_β) Quill logger
@@ -98,6 +99,8 @@ declare class QuillLog<T extends string> {
      * @deprecated v0.0.1 no longer supported
      */
     static getInstance(): QuillLog<any>;
+    private shutdown;
+    private handleProcessExit;
 }
 export default QuillLog;
 export { QuillLog };

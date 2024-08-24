@@ -79,6 +79,7 @@ class QuillLog {
      * quill.log('Debug', "debugging"); // -> Error: "Debug is not a valid log level"
      */
     constructor(options) {
+        this.Logger_events = {};
         // super();
         this.emitter = new event_1.LoggerEventEmitter();
         this.Logger_debugMode = options.debug || false;
@@ -114,13 +115,16 @@ class QuillLog {
                 };
             });
             this.filelogger = new fileLog_1.FileLogger(levelConfigs);
+            // 註冊檔案日誌事件
             Object.keys(this.Logger_level).forEach((level) => {
-                this.on(level, (level, _message, _optionalParams, _timestamp, formatMessage) => {
+                const e = this.on(level, (level, _message, _optionalParams, _timestamp, formatMessage) => {
                     var _a;
                     (_a = this.filelogger) === null || _a === void 0 ? void 0 : _a.log(level, formatMessage);
                 });
+                this.Logger_events[level] = e;
             });
         }
+        this.handleProcessExit();
         // this
         this.QuillLog = this;
         // QuillLog.instance = this;
@@ -201,6 +205,23 @@ class QuillLog {
         throw errors_1.LoggerError.NoLongerSupported();
         // if (!QuillLog.instance) throw LoggerError.NoExistingInstance();
         // return QuillLog.instance;
+    }
+    shutdown() {
+        Object.keys(this.Logger_level).forEach((level) => {
+            if (this.Logger_events[level] !== undefined)
+                this.off(level, this.Logger_events[level]);
+        });
+    }
+    handleProcessExit() {
+        process.on("exit", () => {
+            this.shutdown();
+        });
+        process.on("SIGINT", () => {
+            this.shutdown();
+        });
+        process.on("SIGTERM", () => {
+            this.shutdown();
+        });
     }
 }
 exports.QuillLog = QuillLog;

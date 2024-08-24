@@ -49,14 +49,17 @@ class QuillLog<T extends string> {
 	private Logger_level: Level<T>;
 	private emitter: LoggerEventEmitter<T>;
 	private Logger_debugMode: boolean;
+	private Logger_events: { [key: string]:  LogListener<T> } = {};
 	// private static instance: Quill<any>;
 	public QuillLog: QuillLog<any>;
 
-	public on: (event: T, listener: LogListener<T>) => void;
-	public once: (event: T, listener: LogListener<T>) => void;
-	public off: (event: T, listener: LogListener<T>) => void;
-	private emit: (level: T, ...args: any) => void;
+	on: (event: T, listener: LogListener<T>) =>  LogListener<T>;
+	once: (event: T, listener: LogListener<T>) =>  LogListener<T>;
+	off: (event: T, listener: LogListener<T>) => import("events");
+	emit: (event: T, ...args: any) => boolean;
+
 	public filelogger?: FileLogger;
+	
 
 	/**
 	 * (>_β) Quill logger
@@ -136,8 +139,9 @@ class QuillLog<T extends string> {
 					};
 			});
 			this.filelogger = new FileLogger(levelConfigs);
+			// 註冊檔案日誌事件
 			Object.keys(this.Logger_level).forEach((level) => {
-				this.on(
+				const e = this.on(
 					level as T,
 					(
 						level,
@@ -152,8 +156,10 @@ class QuillLog<T extends string> {
 						);
 					}
 				);
+				this.Logger_events[level] = e;
 			});
 		}
+		this.handleProcessExit();
 		// this
 		this.QuillLog = this;
 		// QuillLog.instance = this;
@@ -255,6 +261,27 @@ class QuillLog<T extends string> {
 		throw LoggerError.NoLongerSupported();
 		// if (!QuillLog.instance) throw LoggerError.NoExistingInstance();
 		// return QuillLog.instance;
+	}
+
+	private shutdown(): void { 
+		Object.keys(this.Logger_level).forEach((level) => {
+			if (this.Logger_events[level as T] !== undefined)
+				this.off(
+					level as T,
+					this.Logger_events[level as T] as LogListener<T>
+				);
+			});
+	}
+	private handleProcessExit() {
+		process.on("exit", () => {
+            this.shutdown();
+        });
+        process.on("SIGINT", () => {
+            this.shutdown();
+        });
+        process.on("SIGTERM", () => {
+            this.shutdown();
+        });
 	}
 }
 

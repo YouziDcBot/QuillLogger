@@ -13,37 +13,39 @@ class LoggerEventEmitter {
      * Emits a logging event.
      * @param {T} event - The level of the logging event.
      * @param {LoggerEvent<T>} args - The logging event to emit.
-     * @returns {void}
+     * @returns {boolean} - Whether the event
      */
     emitEvent(event, ...args) {
-        eventLogger.emit(`Logger_${event}`, ...args);
+        return eventLogger.emit(`Logger_${event}`, ...args);
     }
     /**
      * Registers a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {listener}
      */
     onEvent(event, listener) {
         eventLogger.on(`Logger_${event}`, listener);
+        return listener;
     }
     /**
      * Registers a one-time listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {LogListener<T>}
      */
     onceEvent(event, listener) {
         eventLogger.once(`Logger_${event}`, listener);
+        return listener;
     }
     /**
      * Removes a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to remove.
-     * @returns {void}
+     * @returns {EventEmitter}
      */
     offEvent(event, listener) {
-        eventLogger.off(`Logger_${event}`, listener);
+        return eventLogger.off(`Logger_${event}`, listener);
     }
 }
 exports.LoggerEventEmitter = LoggerEventEmitter;

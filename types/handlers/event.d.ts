@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 export interface LoggerEvent<T extends string> {
     level: T;
     message: string;
@@ -15,29 +16,29 @@ export declare class LoggerEventEmitter<T extends string> {
      * Emits a logging event.
      * @param {T} event - The level of the logging event.
      * @param {LoggerEvent<T>} args - The logging event to emit.
-     * @returns {void}
+     * @returns {boolean} - Whether the event
      */
-    emitEvent(event: T, ...args: any): void;
+    emitEvent(event: T, ...args: any): boolean;
     /**
      * Registers a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {listener}
      */
-    onEvent(event: T, listener: LogListener<T>): void;
+    onEvent(event: T, listener: LogListener<T>): LogListener<T>;
     /**
      * Registers a one-time listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to call when the event is emitted.
-     * @returns {void}
+     * @returns {LogListener<T>}
      */
-    onceEvent(event: T, listener: LogListener<T>): void;
+    onceEvent(event: T, listener: LogListener<T>): LogListener<T>;
     /**
      * Removes a listener for a specific logging event level.
      * @param {T} event - The level of the logging event.
      * @param {LogListener<T>} listener - The listener function to remove.
-     * @returns {void}
+     * @returns {EventEmitter}
      */
-    offEvent(event: T, listener: LogListener<T>): void;
+    offEvent(event: T, listener: LogListener<T>): EventEmitter;
 }
 //# sourceMappingURL=event.d.ts.map
