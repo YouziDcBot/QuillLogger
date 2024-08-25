@@ -18,6 +18,9 @@ class LoggerError extends Error {
     static NoExistingInstance() {
         return new LoggerError("No existing instance of Quill");
     }
+    static InvalidThisInstance() {
+        return new LoggerError("log method called with incorrect `this` context. Did you forget to bind the method? E.g. `this.log = quill.log.bind(this)`");
+    }
     static LogFileError(err) {
         return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
     }

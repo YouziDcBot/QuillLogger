@@ -45,7 +45,7 @@ class FileLogger {
         this.retentionDays = retentionDays;
         Object.keys(this.levelConfigs).forEach(level => {
             const config = this.levelConfigs[level];
-            const logDirectory = path.join(__dirname, "../..", config.logDirectory);
+            const logDirectory = path.join(config.logDirectory);
             if (!fs.existsSync(logDirectory)) {
                 fs.mkdirSync(logDirectory);
             }

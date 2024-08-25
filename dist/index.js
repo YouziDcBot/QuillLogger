@@ -146,6 +146,9 @@ class QuillLog {
      * quill.log('Log', 'hello %s!', 'world'); // -> 'hello world!'
      */
     log(level, message, ...optionalParams) {
+        if (!(this instanceof QuillLog)) {
+            throw errors_1.LoggerError.InvalidThisInstance();
+        }
         const levelConfig = this.Logger_level[level];
         if (!levelConfig)
             throw errors_1.LoggerError.ValidLogLevel(level);
