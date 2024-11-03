@@ -19,7 +19,9 @@ class LoggerError extends Error {
         return new LoggerError("No existing instance of Quill");
     }
     static InvalidThisInstance() {
-        return new LoggerError("log method called with incorrect `this` context. Did you forget to bind the method? E.g. `this.log = quill.log.bind(this)`");
+        return new LoggerError(`The log method was called with an incorrect \`this\` context. 
+Did you forget to bind the method to the correct class instance? 
+E.g. \`this.log = quill.log.bind(quill)\`, where \`quill\` is the return value of \`new QuillLog()\``);
     }
     static LogFileError(err) {
         return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
