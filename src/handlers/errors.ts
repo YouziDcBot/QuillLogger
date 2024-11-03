@@ -15,15 +15,21 @@ export class LoggerError extends Error {
 	static NoExistingInstance(): LoggerError {
 		return new LoggerError("No existing instance of Quill");
 	}
-	static InvalidThisInstance(): LoggerError { 
-		return new LoggerError("log method called with incorrect `this` context. Did you forget to bind the method? E.g. `this.log = quill.log.bind(this)`");
+	static InvalidThisInstance(): LoggerError {
+		return new LoggerError(
+			`The log method was called with an incorrect \`this\` context. 
+Did you forget to bind the method to the correct class instance? 
+E.g. \`this.log = quill.log.bind(quill)\`, where \`quill\` is the return value of \`new QuillLog()\``
+		);
 	}
 	static LogFileError(err: NodeJS.ErrnoException): LoggerError {
-		return new LoggerError(`Failed at log file: ${err.message} \n${JSON.stringify(err)}`);
-    }
-    static LogShutdown(): LoggerError {
-        return new LoggerError("Logger was shut down");
-    }
+		return new LoggerError(
+			`Failed at log file: ${err.message} \n${JSON.stringify(err)}`
+		);
+	}
+	static LogShutdown(): LoggerError {
+		return new LoggerError("Logger was shut down");
+	}
 
 	private constructor(message: string) {
 		super(message);
