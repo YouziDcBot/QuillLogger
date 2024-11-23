@@ -36,11 +36,13 @@ const fileLog_1 = require("./handlers/fileLog");
 color.enable();
 /**
  * Quill logger class
+ * Quill 日誌類
  */
 class QuillLog {
     /**
      * (>_β) Quill logger
-     * @param {LoggerOptions<T>} options The format and levels of the log message.
+     * (>_β) Quill 日誌
+     * @param {LoggerOptions<T>} options The format and levels of the log message. 日誌消息的格式和級別。
      * @example
      * const quill = new QuillLog({
      *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
@@ -139,9 +141,10 @@ class QuillLog {
     }
     /**
      * Quill log
-     * @param {T} level The level of the log message
-     * @param {string} message The log message
-     * @param {any[]} [optionalParams] Options parameters
+     * Quill 日誌
+     * @param {T} level The level of the log message 日誌消息的級別
+     * @param {string} message The log message 日誌消息
+     * @param {any[]} [optionalParams] Options parameters 可選參數
      * @example
      * quill.log('Log', 'hello %s!', 'world'); // -> 'hello world!'
      */
@@ -163,11 +166,20 @@ class QuillLog {
     formatMessage(level = "", message) {
         var _a;
         let formatted = ((_a = this.Logger_level[level]) === null || _a === void 0 ? void 0 : _a.format) || this.Logger_format;
-        const searchValue = /{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
-        formatted = formatted.replace(searchValue, (_, key, style, dateFormat) => {
+        const searchValue = /{{[^\{\}\n]*}}/g;
+        formatted = formatted.replace(searchValue, (match) => {
+            let content = match.slice(2, -2).trim();
+            let [key, ...styles] = content.split(".");
+            let dateFormat = "";
+            if (key === "date") {
+                const dateStyle = styles.pop();
+                if (dateStyle && dateStyle.includes(":")) {
+                    const parts = dateStyle.split(":");
+                    styles.push(parts[0]);
+                    dateFormat = parts.slice(1).join(":");
+                }
+            }
             let value = "";
-            if (this.Logger_debugMode)
-                console.debug("Replacer: ", _, key, style, dateFormat);
             switch (key) {
                 case "prefix":
                     value = this.Logger_level[level].prefix;
@@ -186,13 +198,10 @@ class QuillLog {
                 default:
                     break;
             }
-            if (style) {
-                const styles = style.split(".");
-                for (const s of styles) {
-                    if (!value[s])
-                        throw errors_1.LoggerError.InvalidStyle(s);
-                    value = value[s];
-                }
+            for (const style of styles) {
+                if (!value[style])
+                    throw errors_1.LoggerError.InvalidStyle(style);
+                value = value[style];
             }
             return value;
         });
@@ -200,21 +209,30 @@ class QuillLog {
     }
     /**
      * getInstance - get instance of Quill Log
-     * @returns {QuillLog} The instance of Quill Log
+     * 獲取 Quill 日誌的實例
+     * @returns {QuillLog} The instance of Quill Log Quill 日誌的實例
      * @version v0.0.1
-     * @deprecated v0.0.1 no longer supported
+     * @deprecated v0.0.1 no longer supported 不再支持
      */
     static getInstance() {
         throw errors_1.LoggerError.NoLongerSupported();
         // if (!QuillLog.instance) throw LoggerError.NoExistingInstance();
         // return QuillLog.instance;
     }
+    /**
+     * Shutdown the logger
+     * 關閉日誌記錄器
+     */
     shutdown() {
         Object.keys(this.Logger_level).forEach((level) => {
             if (this.Logger_events[level] !== undefined)
                 this.off(level, this.Logger_events[level]);
         });
     }
+    /**
+     * Handle process exit events
+     * 處理進程退出事件
+     */
     handleProcessExit() {
         process.on("exit", () => {
             this.shutdown();

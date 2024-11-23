@@ -28,6 +28,7 @@ type Level<T extends string = string> = {
 };
 /**
  * Quill logger class
+ * Quill 日誌類
  */
 declare class QuillLog<T extends string> {
     private Logger_format;
@@ -43,7 +44,8 @@ declare class QuillLog<T extends string> {
     filelogger?: FileLogger;
     /**
      * (>_β) Quill logger
-     * @param {LoggerOptions<T>} options The format and levels of the log message.
+     * (>_β) Quill 日誌
+     * @param {LoggerOptions<T>} options The format and levels of the log message. 日誌消息的格式和級別。
      * @example
      * const quill = new QuillLog({
      *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
@@ -84,9 +86,10 @@ declare class QuillLog<T extends string> {
     constructor(options: LoggerOptions<T>);
     /**
      * Quill log
-     * @param {T} level The level of the log message
-     * @param {string} message The log message
-     * @param {any[]} [optionalParams] Options parameters
+     * Quill 日誌
+     * @param {T} level The level of the log message 日誌消息的級別
+     * @param {string} message The log message 日誌消息
+     * @param {any[]} [optionalParams] Options parameters 可選參數
      * @example
      * quill.log('Log', 'hello %s!', 'world'); // -> 'hello world!'
      */
@@ -94,12 +97,21 @@ declare class QuillLog<T extends string> {
     private formatMessage;
     /**
      * getInstance - get instance of Quill Log
-     * @returns {QuillLog} The instance of Quill Log
+     * 獲取 Quill 日誌的實例
+     * @returns {QuillLog} The instance of Quill Log Quill 日誌的實例
      * @version v0.0.1
-     * @deprecated v0.0.1 no longer supported
+     * @deprecated v0.0.1 no longer supported 不再支持
      */
     static getInstance(): QuillLog<any>;
+    /**
+     * Shutdown the logger
+     * 關閉日誌記錄器
+     */
     private shutdown;
+    /**
+     * Handle process exit events
+     * 處理進程退出事件
+     */
     private handleProcessExit;
 }
 export default QuillLog;

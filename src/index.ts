@@ -43,27 +43,28 @@ interface LevelConfig {
 
 /**
  * Quill logger class
+ * Quill 日誌類
  */
 class QuillLog<T extends string> {
 	private Logger_format: string;
 	private Logger_level: Level<T>;
 	private emitter: LoggerEventEmitter<T>;
 	private Logger_debugMode: boolean;
-	private Logger_events: { [key: string]:  LogListener<T> } = {};
+	private Logger_events: { [key: string]: LogListener<T> } = {};
 	// private static instance: Quill<any>;
 	public QuillLog: QuillLog<any>;
 
-	on: (event: T, listener: LogListener<T>) =>  LogListener<T>;
-	once: (event: T, listener: LogListener<T>) =>  LogListener<T>;
+	on: (event: T, listener: LogListener<T>) => LogListener<T>;
+	once: (event: T, listener: LogListener<T>) => LogListener<T>;
 	off: (event: T, listener: LogListener<T>) => import("events");
 	emit: (event: T, ...args: any) => boolean;
 
 	public filelogger?: FileLogger;
-	
 
 	/**
 	 * (>_β) Quill logger
-	 * @param {LoggerOptions<T>} options The format and levels of the log message.
+	 * (>_β) Quill 日誌
+	 * @param {LoggerOptions<T>} options The format and levels of the log message. 日誌消息的格式和級別。
 	 * @example
 	 * const quill = new QuillLog({
 	 *     format: "[{{level.gray}}] {{date.gray:HH:mm:ss}} {{msg}}",
@@ -127,16 +128,16 @@ class QuillLog<T extends string> {
 			const levelConfigs: { [level: string]: LevelConfig } = {};
 			Object.keys(this.Logger_level).forEach((level) => {
 				const levelConfig = this.Logger_level[level as T];
-					levelConfigs[level] = {
-						logDirectory:
-							levelConfig.files?.logDirectory ||
-							options.files?.logDirectory ||
-							"log",
-						logName:
-							levelConfig.files?.name ||
-							options.files?.logName ||
-							"{{date:YYYY-MM-DD}}.log",
-					};
+				levelConfigs[level] = {
+					logDirectory:
+						levelConfig.files?.logDirectory ||
+						options.files?.logDirectory ||
+						"log",
+					logName:
+						levelConfig.files?.name ||
+						options.files?.logName ||
+						"{{date:YYYY-MM-DD}}.log",
+				};
 			});
 			this.filelogger = new FileLogger(levelConfigs);
 			// 註冊檔案日誌事件
@@ -150,10 +151,7 @@ class QuillLog<T extends string> {
 						_timestamp,
 						formatMessage
 					) => {
-						this.filelogger?.log(
-							level,
-							formatMessage
-						);
+						this.filelogger?.log(level, formatMessage);
 					}
 				);
 				this.Logger_events[level] = e;
@@ -175,16 +173,17 @@ class QuillLog<T extends string> {
 
 	/**
 	 * Quill log
-	 * @param {T} level The level of the log message
-	 * @param {string} message The log message
-	 * @param {any[]} [optionalParams] Options parameters
+	 * Quill 日誌
+	 * @param {T} level The level of the log message 日誌消息的級別
+	 * @param {string} message The log message 日誌消息
+	 * @param {any[]} [optionalParams] Options parameters 可選參數
 	 * @example
 	 * quill.log('Log', 'hello %s!', 'world'); // -> 'hello world!'
 	 */
 	public log(level: T, message?: any, ...optionalParams: any[]): void {
 		if (!(this instanceof QuillLog)) {
-            throw LoggerError.InvalidThisInstance();
-        }
+			throw LoggerError.InvalidThisInstance();
+		}
 		const levelConfig = this.Logger_level[level];
 		if (!levelConfig) throw LoggerError.ValidLogLevel(level);
 
@@ -211,54 +210,59 @@ class QuillLog<T extends string> {
 	private formatMessage(level: T = "" as T, message: string): string {
 		let formatted = this.Logger_level[level]?.format || this.Logger_format;
 
-		const searchValue =
-			/{{(prefix|level|msg|date)(?:\.([\w.]+))?:?(.*?)}}/g;
+		const searchValue = /{{[^\{\}\n]*}}/g;
 
-		formatted = formatted.replace(
-			searchValue,
-			(_, key: string, style: string, dateFormat: string) => {
-				let value = "";
+		formatted = formatted.replace(searchValue, (match) => {
+			let content = match.slice(2, -2).trim();
+			let [key, ...styles] = content.split(".");
+			let dateFormat = "";
 
-				if (this.Logger_debugMode)
-					console.debug("Replacer: ", _, key, style, dateFormat);
-				switch (key) {
-					case "prefix":
-						value = this.Logger_level[level].prefix;
-						break;
-					case "level":
-						value = level;
-						break;
-					case "msg":
-						value = message;
-						break;
-					case "date":
-						value = moment().format(dateFormat);
-						if (!value) throw LoggerError.InvalidDateFormat(value);
-						break;
-					default:
-						break;
+			if (key === "date") {
+				const dateStyle = styles.pop();
+				if (dateStyle && dateStyle.includes(":")) {
+					const parts = dateStyle.split(":");
+					styles.push(parts[0]);
+					dateFormat = parts.slice(1).join(":");
 				}
-
-				if (style) {
-					const styles = style.split(".");
-					for (const s of styles) {
-						if (!(value as any)[s])
-							throw LoggerError.InvalidStyle(s);
-						value = (value as any)[s];
-					}
-				}
-				return value;
 			}
-		);
+
+			let value = "";
+			switch (key) {
+				case "prefix":
+					value = this.Logger_level[level].prefix;
+					break;
+				case "level":
+					value = level;
+					break;
+				case "msg":
+					value = message;
+					break;
+				case "date":
+					value = moment().format(dateFormat);
+					if (!value) throw LoggerError.InvalidDateFormat(value);
+					break;
+				default:
+					break;
+			}
+
+			for (const style of styles) {
+				if (!(value as any)[style])
+					throw LoggerError.InvalidStyle(style);
+				value = (value as any)[style];
+			}
+
+			return value;
+		});
 
 		return formatted;
 	}
 
 	/**
 	 * getInstance - get instance of Quill Log
-	 * @returns {QuillLog} The instance of Quill Log
+	 * 獲取 Quill 日誌的實例
+	 * @returns {QuillLog} The instance of Quill Log Quill 日誌的實例
 	 * @version v0.0.1
-	 * @deprecated v0.0.1 no longer supported
+	 * @deprecated v0.0.1 no longer supported 不再支持
 	 */
 	public static getInstance(): QuillLog<any> {
 		throw LoggerError.NoLongerSupported();
@@ -266,25 +270,34 @@ class QuillLog<T extends string> {
 		// return QuillLog.instance;
 	}
 
-	private shutdown(): void { 
+	/**
+	 * Shutdown the logger
+	 * 關閉日誌記錄器
+	 */
+	private shutdown(): void {
 		Object.keys(this.Logger_level).forEach((level) => {
 			if (this.Logger_events[level as T] !== undefined)
 				this.off(
 					level as T,
 					this.Logger_events[level as T] as LogListener<T>
 				);
-			});
+		});
 	}
+
+	/**
+	 * Handle process exit events
+	 * 處理進程退出事件
+	 */
 	private handleProcessExit() {
 		process.on("exit", () => {
-            this.shutdown();
-        });
-        process.on("SIGINT", () => {
-            this.shutdown();
-        });
-        process.on("SIGTERM", () => {
-            this.shutdown();
-        });
+			this.shutdown();
+		});
+		process.on("SIGINT", () => {
+			this.shutdown();
+		});
+		process.on("SIGTERM", () => {
+			this.shutdown();
+		});
 	}
 }
 
