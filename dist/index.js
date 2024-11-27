@@ -37,6 +37,7 @@ color.enable();
 /**
  * Quill logger class
  * Quill 日誌類
+ * @template T
  */
 class QuillLog {
     /**
@@ -85,6 +86,9 @@ class QuillLog {
         // super();
         this.emitter = new event_1.LoggerEventEmitter();
         this.Logger_debugMode = options.debug || false;
+        if (this.Logger_debugMode) {
+            console.debug("QuillLog: Debug mode enabled");
+        }
         this.Logger_format =
             options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
         this.Logger_level =
@@ -163,6 +167,13 @@ class QuillLog {
         // Emit the log event
         this.emit(level, level, message, optionalParams, timestamp, formattedMessage);
     }
+    /**
+     * Format the log message
+     * 格式化日誌消息
+     * @param {T} level The level of the log message 日誌消息的級別
+     * @param {string} message The log message 日誌消息
+     * @returns {string} The formatted log message 格式化的日誌消息
+     */
     formatMessage(level = "", message) {
         var _a;
         let formatted = ((_a = this.Logger_level[level]) === null || _a === void 0 ? void 0 : _a.format) || this.Logger_format;

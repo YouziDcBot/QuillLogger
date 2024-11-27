@@ -9,6 +9,22 @@ import { FileLogger } from "./handlers/fileLog";
 color.enable();
 // moment.locale('en_us');
 
+/**
+ * Logger options interface
+ * 日誌選項介面
+ * @typedef {Object} LoggerOptions
+ * @property {string} [format] The format of the log message 日誌消息的格式
+ * @property {boolean} [debug] Enable debug mode 啟用調試模式
+ * @property {Level<T>} [level] The levels of the log message 日誌消息的級別
+ * @property {Object} [files] File logging options 文件日誌選項
+ * @property {string} files.logDirectory The directory to store log files 存儲日誌文件的目錄
+ * @property {string} [files.logName] The name of the log file 日誌文件的名稱
+ * @property {number} files.bufferSize The buffer size for log files 日誌文件的緩衝區大小
+ * @property {number} files.flushInterval The interval to flush log files 刷新日誌文件的間隔
+ * @property {number} files.maxFileSize The maximum size of log files 日誌文件的最大大小
+ * @property {number} files.retentionDays The number of days to retain log files 保留日誌文件的天數
+ */
+
 interface LoggerOptions<T extends string = string> {
 	format?: string;
 	debug?: boolean;
@@ -22,6 +38,19 @@ interface LoggerOptions<T extends string = string> {
 		retentionDays: number;
 	};
 }
+
+/**
+ * Level configuration interface
+ * 級別配置介面
+ * @typedef {Object} Level
+ * @property {string} color The color of the log message 日誌消息的顏色
+ * @property {string} use The console method to use 使用的控制台方法
+ * @property {string} prefix The prefix of the log message 日誌消息的前綴
+ * @property {string} [format] The format of the log message 日誌消息的格式
+ * @property {Object} [files] File logging options 文件日誌選項
+ * @property {string} files.name The name of the log file 日誌文件的名稱
+ * @property {string} files.logDirectory The directory to store log files 存儲日誌文件的目錄
+ */
 
 type Level<T extends string = string> = {
 	[K in T]: {
@@ -44,6 +73,7 @@ interface LevelConfig {
 /**
  * Quill logger class
  * Quill 日誌類
+ * @template T
  */
 class QuillLog<T extends string> {
 	private Logger_format: string;
@@ -106,6 +136,9 @@ class QuillLog<T extends string> {
 		// super();
 		this.emitter = new LoggerEventEmitter();
 		this.Logger_debugMode = options.debug || false;
+		if (this.Logger_debugMode) {
+			console.debug("QuillLog: Debug mode enabled");
+		}
 		this.Logger_format =
 			options.format || "[{{prefix}}] {{date:HH:mm:ss}} {{msg}}";
 		this.Logger_level =
@@ -207,6 +240,13 @@ class QuillLog<T extends string> {
 		);
 	}
 
+	/**
+	 * Format the log message
+	 * 格式化日誌消息
+	 * @param {T} level The level of the log message 日誌消息的級別
+	 * @param {string} message The log message 日誌消息
+	 * @returns {string} The formatted log message 格式化的日誌消息
+	 */
 	private formatMessage(level: T = "" as T, message: string): string {
 		let formatted = this.Logger_level[level]?.format || this.Logger_format;
 
