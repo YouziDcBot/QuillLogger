@@ -34,7 +34,7 @@ interface LoggerOptions<T extends string = string> {
  * 級別配置介面
  * @typedef {Object} Level
  * @property {string} color The color of the log message 日誌消息的顏色
- * @property {string} use The console method to use 使用的控制台方法
+ * @property {string | Function} use The console method to use 使用的控制台方法
  * @property {string} prefix The prefix of the log message 日誌消息的前綴
  * @property {string} [format] The format of the log message 日誌消息的格式
  * @property {Object} [files] File logging options 文件日誌選項
@@ -44,7 +44,7 @@ interface LoggerOptions<T extends string = string> {
 type Level<T extends string = string> = {
     [K in T]: {
         color: keyof color.Color;
-        use: keyof Console;
+        use: keyof Console | ((arg: any, ...args: any[]) => void);
         prefix: string;
         format?: string;
         files?: {

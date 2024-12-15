@@ -162,7 +162,9 @@ class QuillLog {
         // const date = moment().format(this.extractDateFormat());
         const formattedMessage = util_1.default.format(this.formatMessage(level, message), ...optionalParams);
         const timestamp = Date.now();
-        const outputFn = console[levelConfig.use];
+        const outputFn = typeof levelConfig.use == "string"
+            ? console[levelConfig.use]
+            : levelConfig.use;
         outputFn(formattedMessage[levelConfig.color]);
         // Emit the log event
         this.emit(level, level, message, optionalParams, timestamp, formattedMessage);

@@ -60,6 +60,14 @@ const q = new QuillLog({
             use: 'debug',
             prefix: '[DEBUG]',
             format: "{{prefix.bold}} {{date:HH:mm:ss}} {{msg}}"
+        },
+        Process:{
+            // 使用 Process 物件來處理日誌輸出，也可以使用 function 來處理要輸出的方式
+            // Use the Process object to handle log output, or use a function to handle the output method
+            color: 'cyan',
+            use: (msg)=>{ process.send(msg); },
+            prefix: '[DEBUG]',
+            format: "{{prefix.bold}} {{date:HH:mm:ss}} {{msg}}"
         }
     },
     files: { // optional
